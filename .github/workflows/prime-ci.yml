@@ -1,0 +1,26 @@
+name: prime-ci
+
+# prime-tasks: runs upstream's unchanged test suite on our branch. Upstream's
+# ci.yml stays in the tree for clean merges but is disabled in the repo
+# settings, because its release job pushes to Docker Hub with upstream secrets.
+
+env:
+  DO_NOT_TRACK: 1
+
+on:
+  pull_request:
+    branches:
+      - prime
+  push:
+    branches:
+      - prime
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Test
+    uses: ./.github/workflows/test.yml
+    secrets: inherit
