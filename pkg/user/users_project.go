@@ -28,6 +28,9 @@ import (
 	"xorm.io/xorm/schemas"
 )
 
+// OrgDirectorySearchLimit caps the users one org directory search returns (service.orgdirectory).
+const OrgDirectorySearchLimit = 20
+
 type ProjectUserOpts struct {
 	AdditionalCond              builder.Cond
 	ReturnAllIfNoSearchProvided bool
