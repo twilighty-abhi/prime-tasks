@@ -26,8 +26,8 @@ Rules for the fork:
 | # | What | PR | Config flag | Upstream status |
 |---|---|---|---|---|
 | B1 | Magefile compiles on Windows (process-group helpers split by OS) | foundation | none (build tooling) | not sent yet; good upstream candidate |
+| B2 | Test fixtures load on Windows (`path.Join` for `embed.FS` paths) | foundation | none (test tooling) | not sent yet; good upstream candidate |
 | F9 | Permission test matrix for project access (`pkg/models/project_permission_matrix_test.go`) | foundation | none (tests only) | fork-only |
-| F1 | Org directory mode: user search matches partial name/username/email of any non-bot user | F1 PR | `service.orgdirectory` (default `false`) | fork-only for now |
 
 ## Merging a new upstream release
 
@@ -100,4 +100,34 @@ MCP `POST http://abhi-t4gc:4173/api/v2/mcp` with an API token that has the `mcp`
 
 ## Test baseline
 
-BASELINE_PLACEHOLDER
+Measured on abhi-t4gc (Windows 11, Go 1.27.3, SQLite in memory) on 2026-10-27. Logs are in `C:\dev\prime-tasks\logs\`.
+
+**Pure upstream v2.7.1:** on Windows, every DB-backed suite died in `TestMain` because fixture paths were built with
+`filepath.Join` (backslashes) against an `embed.FS` (fix B2 below). Before the fix: `test:feature` 34 packages ok
+and 20 failed, and `test:web`, `test:caldav` and `test:e2EApi` failed before running a single test. `mage` itself
+didn't compile on Windows (fix B1).
+
+**With B1 and B2 (the foundation branch):**
+
+| Suite | Result |
+|---|---|
+| `mage test:feature` | 48 packages ok, 6 fail, all Windows-only (below) |
+| `mage test:web` | ok |
+| `mage test:caldav` | ok |
+| `mage test:e2EApi` | ok |
+| frontend unit (`vitest run --dir ./src`) | 202 files, 2536 tests passed |
+| F9 matrix, SQLite and Postgres 16.15 | 91 subtests passed |
+| frontend e2e (Playwright) | not run on the laptop; CI runs it |
+
+`test:feature` failures that only happen on Windows (upstream Linux CI is green on v2.7.1):
+
+| Package | Tests | Cause |
+|---|---|---|
+| `pkg/config`, `pkg/db` | `TestResolvePath`, `TestPathsFollowRootpath`, `Test_resolveDatabasePath*` | expect Unix absolute paths like `/etc/vikunja/config.yml` |
+| `pkg/log`, `pkg/models` | `TestConfigureStandardLogger*`, `TestMakeLogHandlerCreatesCorrectLogFile`, `TestWebhookErrorResponseBodyIsTruncated` | temp dir cleanup can't delete a log file that is still open (Windows locks open files) |
+| `pkg/modules/keyvalue` | `TestPutWithTTL` | 1 ns TTL; Windows clock resolution doesn't advance between put and get |
+| `pkg/models`, `pkg/metrics` | `TestAPITokenExpiring{Week,Day}Notification`, `TestActiveUsers` | elapsed-time assertions; most likely the same coarse clock (to confirm on Linux CI) |
+
+`mage lint:fix` on Windows also reports `pkg/utils/umask_windows.go` (unused parameter). That file is only
+linted on Windows; CI lints on Linux. Left as is.
+
