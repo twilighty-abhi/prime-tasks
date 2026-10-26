@@ -25,9 +25,9 @@ Rules for the fork:
 
 | # | What | PR | Config flag | Upstream status |
 |---|---|---|---|---|
-| B1 | Magefile compiles on Windows (process-group helpers split by OS) | foundation | none (build tooling) | not sent yet; good upstream candidate |
-| B2 | Test fixtures load on Windows (`path.Join` for `embed.FS` paths) | foundation | none (test tooling) | not sent yet; good upstream candidate |
-| F9 | Permission test matrix for project access (`pkg/models/project_permission_matrix_test.go`) | foundation | none (tests only) | fork-only |
+| B1 | Magefile compiles on Windows (process-group helpers split by OS) | [#1](https://github.com/twilighty-abhi/prime-tasks/pull/1) | none (build tooling) | not sent yet; good upstream candidate |
+| B2 | Test fixtures load on Windows (`path.Join` for `embed.FS` paths) | [#1](https://github.com/twilighty-abhi/prime-tasks/pull/1) | none (test tooling) | not sent yet; good upstream candidate |
+| F9 | Permission test matrix for project access (`pkg/models/project_permission_matrix_test.go`) | [#1](https://github.com/twilighty-abhi/prime-tasks/pull/1) | none (tests only) | fork-only |
 
 ## Merging a new upstream release
 
