@@ -1,0 +1,12 @@
+{
+	email {$ACME_EMAIL}
+}
+
+{$PRIME_DOMAIN} {
+	encode zstd gzip
+	# keep in sync with files.maxsize in config.yml
+	request_body {
+		max_size 60MB
+	}
+	reverse_proxy prime-tasks:3456
+}
