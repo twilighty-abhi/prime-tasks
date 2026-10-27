@@ -1,0 +1,246 @@
+// prime-tasks Y1: the Yuyu Design System tokens, and Vikunja's own custom properties
+// mapped onto them. Imported after colors.scss and shadows.scss so these values win.
+// Vikunja's dark mode is the `.dark` class on <html>, so dark values sit under :root.dark.
+// src/styles/yuyu.test.ts checks the grey scale and every text/background pair below.
+
+// ---------------------------------------------------------------------------
+// Yuyu tokens
+// ---------------------------------------------------------------------------
+
+:root {
+  --yy-bg-canvas: #FFFFFF;          /* page background and cards */
+  --yy-bg-subtle: #FAFAF9;          /* sidebar, quiet read-only fields */
+  --yy-bg-muted: #F4F4F2;           /* neutral chips, segmented-control track */
+  --yy-bg-emphasis: #EFEEEA;        /* selected nav item, hover fill, disabled button */
+  --yy-bg-track: #F0EFEB;           /* progress-bar track */
+  --yy-border: #E7E6E2;             /* card borders, dividers */
+  --yy-border-strong: #D4D3CE;      /* inputs, secondary buttons, dashed empty states */
+  --yy-text: #18181B;               /* primary text, headings */
+  --yy-text-secondary: #3F3F46;     /* body copy, table cells */
+  --yy-text-muted: #5F5E5A;         /* meta, captions; lightest readable text */
+  --yy-text-disabled: #A1A09A;      /* disabled labels only, never content */
+  --yy-primary: #18181B;            /* the primary action is ink, one per view */
+  --yy-on-primary: #FFFFFF;
+  --yy-inverse-surface: #18181B;
+  --yy-success-bg: #DCFCE7;  --yy-success-fg: #166534;
+  --yy-warning-bg: #FEF3C7;  --yy-warning-fg: #92400E;
+  --yy-danger-bg: #FEE2E2;   --yy-danger-fg: #B91C1C;  --yy-danger-border: #FCA5A5;
+  --yy-space-1: 4px;  --yy-space-2: 8px;  --yy-space-3: 12px; --yy-space-4: 16px;
+  --yy-space-5: 20px; --yy-space-6: 24px; --yy-space-8: 32px; --yy-space-10: 40px;
+  --yy-space-12: 48px; --yy-space-16: 64px; --yy-space-20: 80px;
+  --yy-radius-sm: 8px;   /* tiny controls */
+  --yy-radius-md: 12px;  /* inputs, nav items */
+  --yy-radius-lg: 16px;  /* cards, list rows, tables, menus */
+  --yy-radius-xl: 20px;
+  --yy-radius-2xl: 24px; /* dialogs */
+  --yy-radius-full: 999px; /* all buttons, chips, search fields, avatars */
+  --yy-shadow-raised: 0 1px 2px rgba(24,24,27,0.04), 0 12px 32px rgba(24,24,27,0.06);
+  --yy-shadow-float: 0 1px 2px rgba(24,24,27,0.04), 0 24px 48px rgba(24,24,27,0.08);
+  --yy-duration-press: 120ms; --yy-duration-hover: 180ms;
+  --yy-duration-panel: 240ms; --yy-duration-success: 360ms;
+  --yy-ease: cubic-bezier(.2, .8, .2, 1);
+  --yy-font-display: "Bricolage Grotesque", ui-sans-serif, system-ui, sans-serif;
+  --yy-font-body: Figtree, system-ui, sans-serif;
+  --yy-font-mono: "JetBrains Mono", ui-monospace, monospace;
+}
+
+:root.dark {
+  --yy-bg-canvas: #111113;
+  --yy-bg-subtle: #18181B;
+  --yy-bg-muted: #232326;
+  --yy-bg-emphasis: #2A2A2E;
+  --yy-bg-track: #2A2A2E;
+  --yy-border: #2A2A2E;
+  --yy-border-strong: #3F3F46;
+  --yy-text: #F4F4F5;
+  --yy-text-secondary: #D4D4D8;
+  --yy-text-muted: #A1A1AA;
+  --yy-text-disabled: #71717A;
+  --yy-primary: #F4F4F5;            /* ink inverts: light buttons, dark text */
+  --yy-on-primary: #18181B;
+  --yy-inverse-surface: #1C1C1F;
+  --yy-success-bg: #13301F;  --yy-success-fg: #86EFAC;
+  --yy-warning-bg: #33270B;  --yy-warning-fg: #FCD34D;
+  --yy-danger-bg: #3A1414;   --yy-danger-fg: #F87171;  --yy-danger-border: #7F1D1D;
+  --yy-shadow-raised: 0 12px 32px rgba(0,0,0,0.5);
+  --yy-shadow-float: 0 24px 48px rgba(0,0,0,0.5);
+}
+
+// ---------------------------------------------------------------------------
+// Derived values (not new colours: interpolations between neighbouring Yuyu neutrals)
+// ---------------------------------------------------------------------------
+
+:root {
+  // Borders of interactive controls (inputs, secondary buttons, checkboxes) need 3:1 against
+  // the canvas. --yy-border-strong is 1.5:1, so controls use the step halfway between
+  // --yy-text-disabled and --yy-text-muted (3.9:1).
+  --yy-control-border: #807F7A;
+  // text on --yy-inverse-surface (toasts)
+  --yy-on-inverse: var(--yy-on-primary);
+}
+
+:root.dark {
+  // --yy-text-disabled already clears 3:1 on the dark canvas.
+  --yy-control-border: #71717A;
+  --yy-on-inverse: var(--yy-text);
+}
+
+// ---------------------------------------------------------------------------
+// Vikunja variables mapped onto the tokens
+// ---------------------------------------------------------------------------
+
+// Shared by both themes: everything that just points at a token.
+:root,
+:root.dark {
+  // Grey scale, anchored on the Yuyu neutrals (light to dark; reversed in dark mode).
+  // 50 bg-subtle, 100 bg-muted, 200 border, 300 border-strong, 400 text-muted,
+  // 500 (interpolated), 600 text-secondary, 700 and 800 (interpolated), 900 text.
+  // Upstream uses --grey-400 for readable text (meta, timestamps) in ~30 places, so 400 is
+  // text-muted; --yy-text-disabled stays out of the scale for disabled labels only.
+  --grey-50: var(--yy-bg-subtle);
+  --grey-100: var(--yy-bg-muted);
+  --grey-200: var(--yy-border);
+  --grey-300: var(--yy-border-strong);
+  --grey-400: var(--yy-text-muted);
+  --grey-600: var(--yy-text-secondary);
+  --grey-900: var(--yy-text);
+
+  --primary-invert: var(--yy-on-primary);
+  --switch-view-active-background: var(--yy-primary);
+  --switch-view-color: var(--yy-on-primary);
+
+  --link: var(--yy-text);
+  --link-hover: var(--yy-text);
+  --link-active: var(--yy-text);
+  --link-focus: var(--yy-text);
+  --link-visited: var(--yy-text);
+  --link-focus-border: var(--yy-primary);
+
+  --text: var(--yy-text-secondary);
+  --text-strong: var(--yy-text);
+  --text-light: var(--yy-text-muted);
+  --text-muted: var(--yy-text-muted);
+  --text-invert: var(--yy-on-primary);
+
+  --site-background: var(--yy-bg-canvas);
+  --scheme-main: var(--yy-bg-canvas);
+  --scheme-main-bis: var(--yy-bg-subtle);
+  --scheme-main-ter: var(--yy-bg-muted);
+  --scheme-invert: var(--yy-text);
+  --scheme-invert-bis: var(--yy-text);
+  --scheme-invert-ter: var(--yy-text-secondary);
+  --background: var(--yy-bg-subtle);
+  --white-ter: var(--yy-bg-muted);
+  --white-bis: var(--yy-bg-subtle);
+
+  --border: var(--yy-border);
+  --border-light: var(--yy-border);
+  --border-hover: var(--yy-border-strong);
+  --border-light-hover: var(--yy-border-strong);
+  --card-border-color: var(--yy-border);
+  --logo-text-color: var(--yy-text);
+
+  --input-border-color: var(--yy-border-strong);
+  --input-color: var(--yy-text);
+  --input-background-color: var(--yy-bg-canvas);
+  --input-placeholder-color: var(--yy-text-muted);
+  --input-hover-color: var(--yy-text);
+  --input-hover-border-color: var(--yy-text-muted);
+  --input-focus-color: var(--yy-text);
+  --input-focus-border-color: var(--yy-primary);
+  --input-focus-box-shadow-color: transparent;
+  --input-shadow: none;
+  --input-disabled-color: var(--yy-text-muted);
+  --input-disabled-background-color: var(--yy-bg-subtle);
+  --input-disabled-border-color: var(--yy-border);
+  --input-arrow: var(--yy-text-muted);
+  --input-icon-color: var(--yy-text-muted);
+  --input-icon-active-color: var(--yy-text);
+
+  --danger-text: var(--yy-danger-fg);
+
+  // Fills under white text, the same in both themes.
+  --danger-h: 0deg;
+  --danger-s: 73.7%;
+  --danger-l: 41.8%;
+  --danger-dark-l: 35%;
+  --danger-invert: #FFFFFF;
+  --success-h: 142.4deg;
+  --success-s: 71.8%;
+  --success-l: 29.2%;
+  --success-invert: #FFFFFF;
+  // Never used for text; the warning chip uses --yy-warning-bg/-fg.
+  --warning-h: 37.7deg;
+  --warning-s: 92.1%;
+  --warning-l: 50.2%;
+  // Info had upstream's blue; it becomes the secondary ink.
+  --info-h: 240deg;
+  --info-s: 5.3%;
+  --info-l: 26.1%;
+
+  --progress-value-background-color: var(--yy-primary);
+  --progress-bar-background-color: var(--yy-bg-track);
+  --dropdown-item-hover-background-color: var(--yy-bg-emphasis);
+  --dropdown-item-hover-color: var(--yy-text);
+  --dropdown-item-active-background-color: var(--yy-bg-emphasis);
+  --dropdown-item-active-color: var(--yy-text);
+  --table-row-hover-background-color: var(--yy-bg-subtle);
+  --tag-background-color: var(--yy-bg-muted);
+  --tag-color: var(--yy-text-secondary);
+  --code: var(--yy-text);
+  --code-background: var(--yy-bg-muted);
+  --pre: var(--yy-text-secondary);
+  --pre-background: var(--yy-bg-subtle);
+  --button-text-hover-background-color: var(--yy-bg-emphasis);
+
+  // Cards are flat; menus and dialogs float.
+  --shadow-xs: none;
+  --shadow-sm: none;
+  --shadow-md: var(--yy-shadow-float);
+  --shadow-lg: var(--yy-shadow-float);
+}
+
+:root {
+  // #18181B
+  --primary-h: 240deg;
+  --primary-s: 5.9%;
+  --primary-l: 10%;
+  --primary-dark-l: 26%;
+  --primary-light-l: 96%;
+
+  --grey-500: #4F4F50; // halfway between text-muted and text-secondary
+  --grey-700: #2C2C31; // halfway between text-secondary and text
+  --grey-800: #222226; // halfway between --grey-700 and text
+
+  --grey-50-hsl: 60, 9.1%, 97.8%;
+  --grey-100-hsl: 60, 8.3%, 95.3%;
+  --grey-500-hsl: 240, 0.6%, 31.2%;
+  --grey-900-hsl: 240, 5.9%, 10%;
+
+  // text on the amber warning fill stays dark ink in both themes
+  --warning-invert: var(--yy-text);
+}
+
+:root.dark {
+  // #F4F4F5, replaces upstream's dark primary-l 58%
+  --primary-h: 240deg;
+  --primary-s: 4.8%;
+  --primary-l: 95.9%;
+  --primary-dark-l: 84%;
+  --primary-light-l: 16%;
+
+  --grey-500: #BBBBC1; // halfway between text-muted and text-secondary
+  --grey-700: #E4E4E7; // halfway between text-secondary and text
+  --grey-800: #ECECEE; // halfway between --grey-700 and text
+
+  --grey-50-hsl: 240, 5.9%, 10%;
+  --grey-100-hsl: 240, 4.1%, 14.3%;
+  --grey-500-hsl: 240, 4.6%, 74.5%;
+  --grey-900-hsl: 240, 4.8%, 95.9%;
+
+  --warning-invert: var(--yy-on-primary); // #18181B; the light --yy-text would be 1.95:1 on amber
+
+  // Upstream points --white at --grey-50 in dark mode; Yuyu's dark canvas is a step darker.
+  --white: var(--yy-bg-canvas);
+  --black-l: 100%;
+}
