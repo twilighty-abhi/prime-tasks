@@ -1,0 +1,785 @@
+// prime-tasks Y1: Yuyu component rules on top of Vikunja's own styles.
+// Colours come only from the --yy-* tokens (custom-properties/yuyu.scss).
+//
+// Most rules sit under :root:root. Component styles are scoped (`.button[data-v-…]`) and load
+// after this file, so the doubled :root adds just enough specificity to win without !important.
+
+// ---------------------------------------------------------------------------
+// Type
+// ---------------------------------------------------------------------------
+
+body {
+  font-family: var(--yy-font-body);
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--yy-text-secondary);
+}
+
+:root:root {
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--yy-font-display);
+    color: var(--yy-text);
+  }
+
+  h1, .title.is-1 {
+    font-size: 38px;
+    line-height: 1.1;
+    font-weight: 800 !important; // upstream theme.scss forces 400 !important on every heading
+    letter-spacing: -0.02em;
+  }
+
+  h2, .title.is-2 {
+    font-size: 30px;
+    line-height: 1.15;
+    font-weight: 800 !important;
+    letter-spacing: -0.01em;
+  }
+
+  h3, .title.is-3 {
+    font-size: 24px;
+    line-height: 1.2;
+    font-weight: 800 !important;
+  }
+
+  h4, .title.is-4 {
+    font-size: 20px;
+    line-height: 1.25;
+    font-weight: 800 !important;
+  }
+
+  @media screen and (max-width: 640px) {
+    h1, .title.is-1 {
+      font-size: 30px;
+    }
+
+    h2, .title.is-2 {
+      font-size: 24px;
+    }
+  }
+
+  .label,
+  label.label,
+  .table th {
+    font-size: 14px;
+    line-height: 1.4;
+    font-weight: 600;
+    color: var(--yy-text);
+  }
+
+  .help,
+  small,
+  time {
+    font-size: 13px;
+    line-height: 1.45;
+    color: var(--yy-text-muted);
+  }
+
+  code,
+  kbd,
+  samp,
+  pre {
+    font-family: var(--yy-font-mono);
+    font-size: 13px;
+  }
+
+  a {
+    transition: color var(--yy-duration-hover) var(--yy-ease);
+  }
+
+  .content a:not(.button),
+  a.is-link-underlined {
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Buttons: pills, Figtree 600. One ink primary per view; destructive is never primary.
+// ---------------------------------------------------------------------------
+
+:root:root {
+  .button {
+    --button-text-color: var(--yy-on-primary);
+
+    font-family: var(--yy-font-body);
+    font-size: 14px;
+    font-weight: 600;
+    text-transform: none;
+    letter-spacing: 0;
+    border-radius: var(--yy-radius-full);
+    min-block-size: 44px;
+    padding-inline: var(--yy-space-5);
+    box-shadow: none;
+    transition: background-color var(--yy-duration-hover) var(--yy-ease),
+      color var(--yy-duration-hover) var(--yy-ease),
+      border-color var(--yy-duration-hover) var(--yy-ease);
+
+    &:hover,
+    &.is-active,
+    &.is-focused,
+    &:active,
+    &:focus {
+      box-shadow: none;
+    }
+
+    &:active {
+      transition-duration: var(--yy-duration-press);
+    }
+
+    &.is-small {
+      min-block-size: 36px;
+      padding-inline: var(--yy-space-4);
+      border-radius: var(--yy-radius-full);
+      font-size: 13px;
+    }
+
+    // primary (the default variant)
+    &,
+    &.is-primary {
+      background-color: var(--yy-primary);
+      color: var(--yy-on-primary);
+      border: 1px solid var(--yy-primary);
+
+      &:hover {
+        background-color: hsla(var(--primary-h), var(--primary-s), var(--primary-dark-l), 1);
+        border-color: hsla(var(--primary-h), var(--primary-s), var(--primary-dark-l), 1);
+        color: var(--yy-on-primary);
+      }
+    }
+
+    // secondary
+    &.is-outlined {
+      background-color: var(--yy-bg-canvas);
+      color: var(--yy-text);
+      border: 1px solid var(--yy-control-border);
+
+      &:hover {
+        background-color: var(--yy-bg-subtle);
+        color: var(--yy-text);
+      }
+    }
+
+    // tertiary
+    &.is-text {
+      background-color: transparent;
+      border-color: transparent;
+      color: var(--yy-text);
+
+      &:hover {
+        background-color: var(--yy-bg-emphasis);
+        color: var(--yy-text);
+      }
+    }
+
+    // danger, in every variant: canvas fill, 1.5px danger border, danger text
+    &.is-danger,
+    &.is-danger.is-outlined,
+    &.is-danger.is-text {
+      background-color: var(--yy-bg-canvas);
+      border: 1.5px solid var(--yy-danger-fg);
+      color: var(--yy-danger-fg);
+
+      &:hover,
+      &:focus,
+      &:active {
+        background-color: var(--yy-danger-bg);
+        border-color: var(--yy-danger-fg);
+        color: var(--yy-danger-fg);
+      }
+
+      &.is-loading::after {
+        border-color: transparent transparent var(--yy-danger-fg) var(--yy-danger-fg);
+      }
+    }
+
+    &[disabled],
+    &[aria-disabled='true'],
+    &.is-disabled {
+      opacity: 1;
+      background-color: var(--yy-bg-emphasis);
+      border-color: var(--yy-bg-emphasis);
+      color: var(--yy-text-muted);
+    }
+  }
+}
+
+// Task detail's "Mark task done": upstream pairs the green fill with dark text, which fails on
+// Yuyu's darker success green; white on it is 5:1. .action-buttons outranks the scoped rule.
+:root:root .action-buttons .button.button--mark-done.is-pending {
+  background-color: var(--success);
+  border-color: var(--success);
+  color: #FFFFFF;
+
+  &:hover,
+  &:focus {
+    background-color: hsl(var(--success-h), var(--success-s), 24%);
+    border-color: hsl(var(--success-h), var(--success-s), 24%);
+    color: #FFFFFF;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Inputs
+// ---------------------------------------------------------------------------
+
+:root:root {
+  .input:not(.title),
+  .textarea,
+  .select select {
+    border: 1px solid var(--yy-control-border);
+    border-radius: var(--yy-radius-md);
+    background-color: var(--yy-bg-canvas);
+    color: var(--yy-text);
+    font-size: 16px;
+    box-shadow: none;
+    transition: border-color var(--yy-duration-hover) var(--yy-ease);
+
+    &:hover {
+      border-color: var(--yy-text-muted);
+    }
+
+    &:focus {
+      border-color: var(--yy-primary);
+    }
+
+    &[disabled],
+    &[readonly] {
+      background-color: var(--yy-bg-subtle);
+      border-color: var(--yy-border);
+      color: var(--yy-text-muted);
+    }
+  }
+
+  .select:not(.is-multiple):not(.is-loading)::after {
+    border-color: var(--yy-text-muted);
+  }
+
+  // search fields are pills
+  input[type='search'],
+  .input.is-search,
+  .search .input {
+    border-radius: var(--yy-radius-full);
+    padding-inline: var(--yy-space-4);
+  }
+
+  .field > .label {
+    margin-block-end: var(--yy-space-2);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Focus ring on every interactive element: 2px ink, 2px offset
+// ---------------------------------------------------------------------------
+
+:root:root {
+  // Text fields are left out: :focus-visible matches mouse focus on them, so upstream gates
+  // their ring on .user-is-tabbing (form.scss, using the focus-ring mixin, now Yuyu's ring).
+  a,
+  button,
+  input[type='checkbox'],
+  input[type='radio'],
+  select,
+  summary,
+  [tabindex],
+  [contenteditable='true'] {
+    &:focus-visible {
+      outline: 2px solid var(--yy-primary);
+      outline-offset: 2px;
+      box-shadow: none;
+    }
+  }
+
+  // Vikunja rings the whole sidebar row instead of the link inside it.
+  .navigation-item:has(*:focus-visible) {
+    box-shadow: none;
+    outline: 2px solid var(--yy-primary);
+    outline-offset: 2px;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Cards and the kanban card: flat, 1px border, 16px radius
+// ---------------------------------------------------------------------------
+
+:root:root {
+  .card,
+  .box {
+    background-color: var(--yy-bg-canvas);
+    border: 1px solid var(--yy-border);
+    border-radius: var(--yy-radius-lg);
+    box-shadow: none;
+    color: var(--yy-text-secondary);
+  }
+
+  // A card inside a card loses its own frame (Yuyu: no cards inside cards).
+  .card .card,
+  .card .box,
+  .modal-content .card .card {
+    border: 0;
+    border-radius: 0;
+    background-color: transparent;
+  }
+
+  .card-header {
+    border-block-end: 1px solid var(--yy-border);
+    border-inline-end: 0;
+    box-shadow: none;
+  }
+
+  .card-header-title {
+    color: var(--yy-text);
+    font-family: var(--yy-font-display);
+    font-weight: 800;
+  }
+
+  .card-footer {
+    background-color: var(--yy-bg-subtle);
+    border-block-start: 1px solid var(--yy-border);
+    border-end-start-radius: var(--yy-radius-lg);
+    border-end-end-radius: var(--yy-radius-lg);
+  }
+
+  // kanban
+  .kanban-card > .task,
+  .kanban-card .task {
+    background-color: var(--yy-bg-canvas);
+    border: 1px solid var(--yy-border);
+    border-radius: var(--yy-radius-lg);
+    box-shadow: none;
+    transition: background-color var(--yy-duration-hover) var(--yy-ease);
+
+    &:not(.has-custom-background-color):hover {
+      background-color: var(--yy-bg-subtle);
+    }
+  }
+
+  .bucket {
+    border-radius: var(--yy-radius-lg);
+  }
+
+  // clickable project cards on the home page and project overview
+  .project-card {
+    border: 1px solid var(--yy-border);
+    border-radius: var(--yy-radius-lg);
+    box-shadow: none;
+    transition: background-color var(--yy-duration-hover) var(--yy-ease);
+
+    &:not(.has-background):hover {
+      background-color: var(--yy-bg-subtle);
+    }
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Sidebar
+// ---------------------------------------------------------------------------
+
+:root:root {
+  .menu-container {
+    background: var(--yy-bg-subtle);
+    border-inline-end: 1px solid var(--yy-border);
+    color: var(--yy-text-secondary);
+  }
+
+  .menu .menu-list {
+    &.other-menu-items li,
+    li > div {
+      margin-inline: var(--yy-space-2);
+      border-radius: var(--yy-radius-md);
+      transition: background-color var(--yy-duration-hover) var(--yy-ease);
+
+      &:hover {
+        background: var(--yy-bg-muted);
+      }
+
+      &:has(> a.router-link-exact-active),
+      &:has(> a[aria-current='page']) {
+        background: var(--yy-bg-emphasis);
+
+        > a {
+          font-weight: 600;
+          color: var(--yy-text);
+        }
+      }
+    }
+
+    .list-menu-link,
+    li,
+    li > div {
+      > a {
+        color: var(--yy-text-secondary);
+
+        &.router-link-exact-active,
+        &.router-link-exact-active .icon:not(.handle) {
+          color: var(--yy-text);
+        }
+      }
+    }
+
+    .menu-item-icon,
+    .collapse-project-button svg {
+      color: var(--yy-text-muted);
+    }
+  }
+
+  // the settings and user-settings side navigation: a filled pill, not a left border
+  .navigation-link {
+    border-inline-start: 0;
+    border-radius: var(--yy-radius-md);
+    color: var(--yy-text-secondary);
+    transition: background-color var(--yy-duration-hover) var(--yy-ease);
+
+    &:hover {
+      background: var(--yy-bg-muted);
+    }
+
+    &.is-active {
+      background: var(--yy-bg-emphasis);
+      color: var(--yy-text);
+      font-weight: 600;
+    }
+  }
+
+  // header icon buttons are controls, so they need 3:1
+  .navbar .trigger-button {
+    color: var(--yy-text-muted);
+  }
+
+  // upstream draws these links in --grey-300, which is a border colour
+  .menu-bottom-link,
+  .legal-links,
+  .legal-links a {
+    color: var(--yy-text-muted);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Menus
+// ---------------------------------------------------------------------------
+
+:root:root {
+  .dropdown-content {
+    background-color: var(--yy-bg-canvas);
+    border: 1px solid var(--yy-border);
+    border-radius: var(--yy-radius-lg);
+    box-shadow: var(--yy-shadow-float);
+    padding: var(--yy-space-1);
+  }
+
+  .dropdown-item {
+    display: flex;
+    align-items: center;
+    min-block-size: 40px;
+    border-radius: var(--yy-radius-sm);
+    color: var(--yy-text-secondary);
+    font-size: 14px;
+    transition: background-color var(--yy-duration-hover) var(--yy-ease);
+
+    &:hover,
+    &.is-active {
+      background-color: var(--yy-bg-emphasis);
+      color: var(--yy-text);
+    }
+
+    &.has-text-danger {
+      color: var(--yy-danger-fg) !important; // Bulma's helper is !important too
+
+      &:hover {
+        background-color: var(--yy-danger-bg);
+      }
+    }
+  }
+
+  .dropdown-divider {
+    background-color: var(--yy-border);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Dialogs: the confirm-style modal (header, text, actions) becomes a floating surface
+// ---------------------------------------------------------------------------
+
+:root:root {
+  .modal-content:has(> .modal-header) {
+    background-color: var(--yy-bg-canvas);
+    color: var(--yy-text-secondary);
+    text-align: start;
+    padding: var(--yy-space-6);
+
+    @media screen and (min-width: $tablet) {
+      border-radius: var(--yy-radius-2xl);
+      box-shadow: var(--yy-shadow-float);
+      border: 1px solid var(--yy-border);
+    }
+
+    @media screen and (max-width: $tablet) {
+      min-block-size: 100%;
+    }
+
+    .modal-header {
+      font-family: var(--yy-font-display);
+      font-size: 24px;
+      line-height: 1.2;
+      font-weight: 800;
+      color: var(--yy-text);
+      margin-block-end: var(--yy-space-3);
+    }
+
+    .content p {
+      color: var(--yy-text-secondary);
+    }
+
+    .actions {
+      display: flex;
+      justify-content: flex-end;
+      flex-wrap: wrap;
+      gap: var(--yy-space-2);
+      margin-block-start: var(--yy-space-6);
+
+      .button {
+        margin: 0;
+      }
+
+      // Cancel is the secondary action, not a red text link.
+      .button.is-text {
+        background-color: var(--yy-bg-canvas);
+        border: 1px solid var(--yy-control-border);
+        color: var(--yy-text) !important; // beats Bulma's .has-text-danger !important
+
+        &:hover {
+          background-color: var(--yy-bg-subtle);
+        }
+      }
+    }
+  }
+
+  // the close button sits on the dark scrim
+  .modal-dialog > .modal-container > .close {
+    color: #FFFFFF;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Chips and badges
+// ---------------------------------------------------------------------------
+
+:root:root {
+  .tag {
+    border-radius: var(--yy-radius-full);
+    font-size: 12px;
+    font-weight: 600;
+    padding-inline: var(--yy-space-3);
+
+    // neutral chips; user-chosen label colours keep their inline background
+    &:not([style*='background']) {
+      background-color: var(--yy-bg-muted);
+      color: var(--yy-text-secondary);
+    }
+
+    &.is-success:not([style*='background']) {
+      background-color: var(--yy-success-bg);
+      color: var(--yy-success-fg);
+    }
+
+    &.is-warning:not([style*='background']) {
+      background-color: var(--yy-warning-bg);
+      color: var(--yy-warning-fg);
+    }
+
+    &.is-danger:not([style*='background']) {
+      background-color: var(--yy-danger-bg);
+      color: var(--yy-danger-fg);
+    }
+  }
+
+  // the "Done" badge: a status chip with its word
+  .is-done {
+    background: var(--yy-success-bg);
+    color: var(--yy-success-fg);
+    border-radius: var(--yy-radius-full);
+    font-size: 12px;
+    font-weight: 700;
+    padding: var(--yy-space-1) var(--yy-space-3);
+  }
+
+  .is-done--small {
+    padding: 2px var(--yy-space-2);
+  }
+
+  // Bulma notifications (Message.vue) use the status pairs
+  .notification {
+    border-radius: var(--yy-radius-lg);
+
+    &.is-warning {
+      background-color: var(--yy-warning-bg);
+      color: var(--yy-warning-fg);
+    }
+
+    &.is-danger {
+      background-color: var(--yy-danger-bg);
+      color: var(--yy-danger-fg);
+    }
+
+    &.is-success {
+      background-color: var(--yy-success-bg);
+      color: var(--yy-success-fg);
+    }
+
+    &.is-info,
+    &.is-primary {
+      background-color: var(--yy-bg-muted);
+      color: var(--yy-text-secondary);
+    }
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Toasts (@kyvg/vue3-notification): no left-border accent, status pairs for errors and successes
+// ---------------------------------------------------------------------------
+
+:root:root {
+  .vue-notification {
+    background: var(--yy-inverse-surface);
+    color: var(--yy-on-inverse);
+    border: 1px solid var(--yy-inverse-surface);
+    border-radius: var(--yy-radius-lg);
+    box-shadow: var(--yy-shadow-float);
+    font-family: var(--yy-font-body);
+    font-size: 14px;
+    padding: var(--yy-space-3) var(--yy-space-4);
+
+    .notification-title {
+      font-weight: 700;
+    }
+
+    &.error {
+      background: var(--yy-danger-bg);
+      color: var(--yy-danger-fg);
+      border-color: var(--yy-danger-border);
+    }
+
+    &.success {
+      background: var(--yy-success-bg);
+      color: var(--yy-success-fg);
+      border-color: var(--yy-success-bg);
+    }
+
+    &.warn {
+      background: var(--yy-warning-bg);
+      color: var(--yy-warning-fg);
+      border-color: var(--yy-warning-bg);
+    }
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Segmented control (project view switcher)
+// ---------------------------------------------------------------------------
+
+:root:root {
+  .switch-view {
+    background: var(--yy-bg-muted);
+    border-radius: var(--yy-radius-full);
+    box-shadow: none;
+    padding: var(--yy-space-1);
+    font-size: 13px;
+  }
+
+  .switch-view-button {
+    border-radius: var(--yy-radius-full);
+    padding: var(--yy-space-1) var(--yy-space-3);
+    color: var(--yy-text-secondary);
+    font-weight: 600;
+    transition: background-color var(--yy-duration-hover) var(--yy-ease),
+      color var(--yy-duration-hover) var(--yy-ease);
+
+    &:hover {
+      background: var(--yy-bg-emphasis);
+      color: var(--yy-text);
+    }
+
+    &.is-active {
+      background: var(--yy-primary);
+      color: var(--yy-on-primary);
+      box-shadow: none;
+    }
+  }
+
+  .switch-view-dropdown-trigger {
+    border-radius: var(--yy-radius-full);
+    padding: var(--yy-space-2) var(--yy-space-4);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Tables
+// ---------------------------------------------------------------------------
+
+:root:root {
+  .table {
+    background-color: var(--yy-bg-canvas);
+    color: var(--yy-text-secondary);
+    border: 1px solid var(--yy-border);
+    border-radius: var(--yy-radius-lg);
+    border-collapse: separate;
+    border-spacing: 0;
+    overflow: hidden;
+
+    th {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--yy-text-muted);
+      background-color: var(--yy-bg-subtle);
+      border-color: var(--yy-border);
+      border-width: 0 0 1px;
+    }
+
+    td {
+      border-color: var(--yy-border);
+      border-width: 0 0 1px;
+    }
+
+    tbody tr:last-child td {
+      border-block-end-width: 0;
+    }
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Progress
+// ---------------------------------------------------------------------------
+
+:root:root {
+  .progress {
+    border-radius: var(--yy-radius-full);
+    background-color: var(--yy-bg-track);
+
+    &::-webkit-progress-bar {
+      background-color: var(--yy-bg-track);
+    }
+
+    &::-webkit-progress-value {
+      background-color: var(--yy-primary);
+    }
+
+    &::-moz-progress-bar {
+      background-color: var(--yy-primary);
+    }
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Motion
+// ---------------------------------------------------------------------------
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+  }
+}

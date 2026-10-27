@@ -35,3 +35,34 @@ $unicode-range: "U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,\
   font-display: swap;
   unicode-range: $unicode-range;
 }
+
+// prime-tasks Y1: Yuyu fonts, latin subset from the Fontsource packages (OFL-1.1, licences next to the files)
+@font-face {
+  font-family: 'Bricolage Grotesque';
+  src: url($font-files-path + 'BricolageGrotesque[wght]_a97804dc.woff2') format('woff2-variations');
+  src: url($font-files-path + 'BricolageGrotesque[wght]_a97804dc.woff2') format('woff2') tech('variations');
+  font-style: normal;
+  font-weight: 600 800;
+  font-display: swap;
+  unicode-range: $unicode-range;
+}
+
+@font-face {
+  font-family: 'Figtree';
+  src: url($font-files-path + 'Figtree[wght]_4ba7d3d0.woff2') format('woff2-variations');
+  src: url($font-files-path + 'Figtree[wght]_4ba7d3d0.woff2') format('woff2') tech('variations');
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  unicode-range: $unicode-range;
+}
+
+@font-face {
+  font-family: 'JetBrains Mono';
+  src: url($font-files-path + 'JetBrainsMono[wght]_18be4527.woff2') format('woff2-variations');
+  src: url($font-files-path + 'JetBrainsMono[wght]_18be4527.woff2') format('woff2') tech('variations');
+  font-style: normal;
+  font-weight: 400 500;
+  font-display: swap;
+  unicode-range: $unicode-range;
+}

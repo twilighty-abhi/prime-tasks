@@ -14,13 +14,15 @@ the bottom.
 styles/
 ├── common-imports.scss     SCSS variables/mixins auto-injected into every .scss/.vue <style lang="scss">
 ├── global.scss             Entry point: pulls in Bulma partials + theme + components + tokens
-├── fonts.scss              @font-face declarations for Quicksand and Open Sans
+├── fonts.scss              @font-face declarations (Quicksand, Open Sans; prime-tasks: Bricolage Grotesque, Figtree, JetBrains Mono)
+├── yuyu.test.ts            prime-tasks: grey scale and contrast checks for the Yuyu tokens
 ├── transitions.scss        Vue <Transition> classes (fade, width)
 ├── tailwind.css            Tailwind v4 entry (utilities only, `tw` prefix)
 │
 ├── custom-properties/      CSS custom-property token definitions
 │   ├── colors.scss         Color tokens (--scheme-*, --grey-*, --primary, …) + dark mode
-│   └── shadows.scss        Shadow tokens (--shadow-xs/sm/md/lg) + dark mode
+│   ├── shadows.scss        Shadow tokens (--shadow-xs/sm/md/lg) + dark mode
+│   └── yuyu.scss           prime-tasks: Yuyu tokens (--yy-*) and Vikunja variables mapped onto them
 │
 ├── theme/                  Global theme rules — selectors that style the whole app
 │   ├── theme.scss          Base resets, focus-visible ring, .box / .is-fullwidth / etc.
@@ -33,7 +35,8 @@ styles/
 │   ├── background.scss     Optional project background image layer
 │   ├── content.scss        .content overrides (Bulma's rich-text container)
 │   ├── helpers.scss        Print utilities (.d-print-none, …)
-│   └── logical-spacing.scss Margin/padding utilities using logical properties
+│   ├── logical-spacing.scss Margin/padding utilities using logical properties
+│   └── yuyu.scss           prime-tasks: Yuyu component rules (buttons, inputs, cards, sidebar, menus, …)
 │
 └── components/             Global styling that couldn't (yet) be scoped to a .vue file
     ├── task.scss           Styles for .task-view on the public share page

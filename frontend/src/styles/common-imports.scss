@@ -10,7 +10,15 @@
 // are defined here.
 //
 
-$family-sans-serif: 'Open Sans', Helvetica, Arial, sans-serif;
+// prime-tasks Y1: Yuyu body and code fonts (the font files stay in place for upstream merges)
+$family-sans-serif: Figtree, system-ui, sans-serif;
+$family-code: "JetBrains Mono", ui-monospace, monospace;
+
+// prime-tasks Y1: Yuyu radii (--yy-radius-md/-lg/-sm/-full)
+$radius: 12px;
+$radius-large: 16px;
+$radius-small: 8px;
+$radius-rounded: 999px;
 
 // the default values get overwritten by the definitions above
 @import "bulma-css-variables/sass/utilities/_all";
@@ -18,7 +26,7 @@ $family-sans-serif: 'Open Sans', Helvetica, Arial, sans-serif;
 // mobile minimum width
 $mobile: 320px;
 
-$vikunja-font: 'Quicksand', sans-serif;
+$vikunja-font: "Bricolage Grotesque", ui-sans-serif, system-ui, sans-serif; // prime-tasks Y1
 
 $pagination-current-border: var(--primary);
 $navbar-item-active-color: var(--primary);
@@ -28,7 +36,7 @@ $site-background: var(--grey-100);
 $transition-duration: 150ms;
 $transition: $transition-duration ease;
 
-$button-height: 34px;
+$button-height: 44px; // prime-tasks Y1: Yuyu md button
 $switch-view-height: 2.69rem;
 
 $navbar-height: 4rem;
@@ -40,6 +48,9 @@ $vikunja-nav-selected-width: 0.4rem;
 
 $close-button-min-space: 84px;
 
+// prime-tasks Y1: Yuyu focus ring, 2px ink with a 2px offset
 @mixin focus-ring {
-  box-shadow: 0 0 0 2px hsla(var(--primary-hsl), 0.5);
+  outline: 2px solid var(--yy-primary);
+  outline-offset: 2px;
+  box-shadow: none;
 }
