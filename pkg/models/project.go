@@ -81,6 +81,11 @@ type Project struct {
 	Expand        ProjectExpandable `xorm:"-" json:"-" query:"expand"`
 	MaxPermission *Permission       `xorm:"-" json:"max_permission" readOnly:"true" doc:"The maximum permission the requesting user has on this project (0 = read, 1 = read/write, 2 = admin), or null when the permission was not computed for this response."`
 
+	// prime-tasks F3: how this project reaches the caller when someone else owns it. Only /api/v2 sets it.
+	SharedVia *ProjectSharedVia `xorm:"-" json:"shared_via,omitempty" readOnly:"true" doc:"How this project is shared with you, when it isn't in your own tree. Absent for projects you own or that sit under a project you own."`
+	// prime-tasks F3: the owner's name, or their username when they have no name. Only /api/v2 sets it.
+	OwnerDisplayName string `xorm:"-" json:"owner_display_name,omitempty" readOnly:"true" doc:"The owner's display name: their name, or their username when they haven't set one."`
+
 	// A timestamp when this project was created. You cannot change this value.
 	Created time.Time `xorm:"created not null" json:"created" readOnly:"true" doc:"A timestamp when this project was created. You cannot change this value."`
 	// A timestamp when this project was last updated. You cannot change this value.

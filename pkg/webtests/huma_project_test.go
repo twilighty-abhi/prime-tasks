@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"strings"
 	"testing"
 
 	"code.vikunja.io/api/pkg/db"
@@ -97,10 +98,13 @@ func TestHumaProject(t *testing.T) {
 				// ILIKE '%Test1%' over every accessible project, inherited ones
 				// included: Test1, Test10-Test17, Test19, + favorites.
 				require.Len(t, paginated.Items, 11)
-				assert.NotContains(t, rec.Body.String(), `Test2"`)
-				assert.NotContains(t, rec.Body.String(), `Test3`)
-				assert.NotContains(t, rec.Body.String(), `Test4`)
-				assert.NotContains(t, rec.Body.String(), `Test5`)
+				// prime-tasks F3: check titles, not the raw body; shared_via now carries parent titles (Test32, ...).
+				for _, p := range paginated.Items {
+					assert.NotEqual(t, "Test2", p.Title)
+					for _, prefix := range []string{"Test3", "Test4", "Test5"} {
+						assert.False(t, strings.HasPrefix(p.Title, prefix), "unexpected project %q", p.Title)
+					}
+				}
 			}
 		})
 		t.Run("Normal with archived projects", func(t *testing.T) {

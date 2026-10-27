@@ -21,7 +21,9 @@ import (
 	"fmt"
 	"net/http"
 
+	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/models"
+	"code.vikunja.io/api/pkg/web"
 	"code.vikunja.io/api/pkg/web/handler"
 
 	"github.com/danielgtaylor/huma/v2"
@@ -40,7 +42,7 @@ func RegisterProjectRoutes(api huma.API) {
 	Register(api, huma.Operation{
 		OperationID: "projects-list",
 		Summary:     "List projects",
-		Description: "Returns the projects the authenticated user has access to (owned plus shared, with child projects of accessible parents), paginated. Archived projects are excluded unless is_archived=true. Pass expand=permissions to include each project's max_permission for the caller.",
+		Description: "Returns the projects the authenticated user has access to (owned plus shared, with child projects of accessible parents), paginated. Archived projects are excluded unless is_archived=true. Pass expand=permissions to include each project's max_permission for the caller. Each project carries owner_display_name, and shared_via when it reaches you through a share rather than your own tree.",
 		Method:      http.MethodGet,
 		Path:        "/projects",
 		Tags:        tags,
@@ -110,7 +112,18 @@ func projectsList(ctx context.Context, in *struct {
 	for _, p := range items {
 		convertToMarkdown(ctx, &p.Description)
 	}
+	if err := addSharedVia(a, items); err != nil {
+		return nil, translateDomainError(err)
+	}
 	return &projectListBody{Body: NewPaginated(items, total, in.Page, in.PerPage)}, nil
+}
+
+// addSharedVia fills the v2-only shared_via and owner_display_name fields (prime-tasks F3).
+// Read-only enrichment: access was already checked by the Do* call that loaded the projects.
+func addSharedVia(a web.Auth, projects []*models.Project) error {
+	s := db.NewSession()
+	defer s.Close()
+	return models.AddProjectSharedVia(s, a, projects)
 }
 
 // projectReadBody is the read shape. Unlike labels/views, models.Project
@@ -137,6 +150,9 @@ func projectsRead(ctx context.Context, in *struct {
 	// the Favorites pseudo-project and saved-filter-backed ones), so the field
 	// is always meaningful here — surfaced unconditionally like labels/views.
 	project.MaxPermission = models.Ptr(models.Permission(maxPermission))
+	if err := addSharedVia(a, []*models.Project{project}); err != nil {
+		return nil, translateDomainError(err)
+	}
 	body := &projectReadBody{Project: *project}
 	convertToMarkdown(ctx, &body.Description)
 	// No ETag/conditional read: a project response carries user-scoped, derived
