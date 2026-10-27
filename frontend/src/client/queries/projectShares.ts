@@ -1,5 +1,5 @@
 import {queryOptions, useMutation, type QueryClient} from '@tanstack/vue-query'
-import {projectUsersList, projectUsersCreate, projectUsersUpdate, projectUsersDelete, projectTeamsList, projectTeamsCreate, projectTeamsUpdate, projectTeamsDelete} from '@/client/generated'
+import {projectUsersList, projectUsersCreate, projectUsersUpdate, projectUsersDelete, projectTeamsList, projectTeamsCreate, projectTeamsUpdate, projectTeamsDelete, projectSharesLeave} from '@/client/generated'
 import type {UserWithPermission, TeamWithPermission} from '@/client/generated'
 import {contextMutationOptions} from './contextMutation'
 import {fetchAllPages} from './fetchAllPages'
@@ -7,6 +7,7 @@ import {projectKeys} from './projects'
 import {userSearchKeys} from './userSearch'
 import {PERMISSIONS, type Permission} from '@/constants/permissions'
 import {i18n} from '@/i18n'
+import {removeProjectFromHistory} from '@/modules/projectHistory'
 
 export const projectShareKeys = {
 	users: (projectId: number) => ['project-shares', projectId, 'users'] as const,
@@ -115,3 +116,22 @@ export function deleteProjectTeamShareMutationOptions() {
 	})
 }
 export const useDeleteProjectTeamShareMutation = () => useMutation(deleteProjectTeamShareMutationOptions())
+
+// prime-tasks F4: the caller removes their own direct share. Access can stay through a team or a
+// parent project, so the project list is refetched instead of patched.
+export function leaveProjectMutationOptions() {
+	return contextMutationOptions({
+		mutationFn: async (projectId: number) => { await projectSharesLeave({path: {project: projectId}}) },
+		onSuccess: (_data, projectId, client) => {
+			client.removeQueries({queryKey: projectShareKeys.users(projectId)})
+			client.removeQueries({queryKey: projectKeys.detail(projectId)})
+			removeProjectFromHistory({id: projectId})
+		},
+		onSettled: (_projectId, client) => Promise.all([
+			client.invalidateQueries({queryKey: projectKeys.list()}),
+			client.invalidateQueries({queryKey: userSearchKeys.all, refetchType: 'none'}),
+		]),
+		successMessage: () => i18n.global.t('project.leave.success'),
+	})
+}
+export const useLeaveProjectMutation = () => useMutation(leaveProjectMutationOptions())
