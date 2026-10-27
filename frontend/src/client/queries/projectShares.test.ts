@@ -2,13 +2,14 @@ import {QueryClient} from '@tanstack/vue-query'
 import {beforeEach, describe, expect, it, vi} from 'vitest'
 import {projectKeys} from './projects'
 
-const sdk = vi.hoisted(() => ({projectUsersList: vi.fn(), projectUsersCreate: vi.fn(), projectUsersUpdate: vi.fn(), projectUsersDelete: vi.fn(), projectTeamsList: vi.fn(), projectTeamsCreate: vi.fn(), projectTeamsUpdate: vi.fn(), projectTeamsDelete: vi.fn()}))
+const sdk = vi.hoisted(() => ({projectUsersList: vi.fn(), projectUsersCreate: vi.fn(), projectUsersUpdate: vi.fn(), projectUsersDelete: vi.fn(), projectTeamsList: vi.fn(), projectTeamsCreate: vi.fn(), projectTeamsUpdate: vi.fn(), projectTeamsDelete: vi.fn(), projectSharesLeave: vi.fn()}))
 vi.mock('@/client/generated', () => sdk)
 vi.mock('@/message', () => ({success: vi.fn(), error: vi.fn()}))
 vi.mock('@/helpers/apiUrl', () => ({getApiBaseUrl: () => '/api/v2/'}))
+vi.mock('@/modules/projectHistory', () => ({removeProjectFromHistory: vi.fn()}))
 vi.mock('@/helpers/auth', () => ({getAuthSessionEpoch: () => 1, getToken: () => null, getTokenIdentity: () => null}))
 
-import {projectShareKeys, projectUserSharesQuery, projectTeamSharesQuery, normalizeSharePermission, createProjectUserShareMutationOptions, updateProjectUserShareMutationOptions, deleteProjectUserShareMutationOptions, createProjectTeamShareMutationOptions, updateProjectTeamShareMutationOptions, deleteProjectTeamShareMutationOptions} from './projectShares'
+import {projectShareKeys, projectUserSharesQuery, projectTeamSharesQuery, normalizeSharePermission, createProjectUserShareMutationOptions, updateProjectUserShareMutationOptions, deleteProjectUserShareMutationOptions, createProjectTeamShareMutationOptions, updateProjectTeamShareMutationOptions, deleteProjectTeamShareMutationOptions, leaveProjectMutationOptions} from './projectShares'
 
 let client: QueryClient
 beforeEach(() => {
@@ -76,5 +77,24 @@ describe('project shares', () => {
 		await client.getMutationCache().build(client, deleteProjectTeamShareMutationOptions()).execute({projectId: 1, teamId: 7})
 		expect(client.getQueryData(projectShareKeys.users(1))).toEqual([{username: 'alex'}])
 		expect(client.getQueryData(projectShareKeys.teams(1))).toEqual([{id: 8}])
+	})
+
+	it('leaves a project: calls shares/me, drops its detail and refetches the project list', async () => {
+		client.setQueryData(projectKeys.detail(7), {id: 7, max_permission: 0})
+		client.setQueryData(projectShareKeys.users(7), [{username: 'me'}])
+		client.setQueryData(projectKeys.list(), {projects: [{id: 7}]})
+		sdk.projectSharesLeave.mockResolvedValue({})
+		await client.getMutationCache().build(client, leaveProjectMutationOptions()).execute(7)
+		expect(sdk.projectSharesLeave.mock.calls).toStrictEqual([[{path: {project: 7}}]])
+		expect(client.getQueryData(projectKeys.detail(7))).toBeUndefined()
+		expect(client.getQueryData(projectShareKeys.users(7))).toBeUndefined()
+		expect(client.getQueryState(projectKeys.list())?.isInvalidated).toBe(true)
+	})
+
+	it('keeps the project when leaving fails', async () => {
+		client.setQueryData(projectKeys.detail(7), {id: 7, max_permission: 0})
+		sdk.projectSharesLeave.mockRejectedValue(new Error('your access comes from the team "ops"'))
+		await expect(client.getMutationCache().build(client, leaveProjectMutationOptions()).execute(7)).rejects.toThrow('ops')
+		expect(client.getQueryData(projectKeys.detail(7))).toEqual({id: 7, max_permission: 0})
 	})
 })

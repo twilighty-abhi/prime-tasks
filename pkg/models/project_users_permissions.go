@@ -17,7 +17,10 @@
 package models
 
 import (
+	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/web"
+
+	"xorm.io/builder"
 	"xorm.io/xorm"
 )
 
@@ -26,9 +29,34 @@ func (lu *ProjectUser) CanCreate(s *xorm.Session, a web.Auth) (bool, error) {
 	return lu.canDoProjectUser(s, a)
 }
 
-// CanDelete checks if the user can delete a user <-> project relation
+// CanDelete checks if the user can delete a user <-> project relation.
+// Besides project admins, a user may remove their own direct share (prime-tasks F4).
 func (lu *ProjectUser) CanDelete(s *xorm.Session, a web.Auth) (bool, error) {
+	own, err := lu.isOwnShare(s, a)
+	if err != nil || own {
+		return own, err
+	}
 	return lu.canDoProjectUser(s, a)
+}
+
+// isOwnShare reports whether lu names the authenticated user and that user has a
+// direct share on lu's project.
+func (lu *ProjectUser) isOwnShare(s *xorm.Session, a web.Auth) (bool, error) {
+	u, is := a.(*user.User)
+	if !is || lu.Username == "" {
+		return false, nil
+	}
+	target, err := user.GetUserByUsername(s, lu.Username)
+	if err != nil {
+		if user.IsErrUserDoesNotExist(err) || user.IsErrUserStatusError(err) {
+			return false, nil
+		}
+		return false, err
+	}
+	if target.ID != u.ID {
+		return false, nil
+	}
+	return s.Where(builder.Eq{"user_id": u.ID, "project_id": lu.ProjectID}).Exist(&ProjectUser{})
 }
 
 // CanUpdate checks if the user can update a user <-> project relation

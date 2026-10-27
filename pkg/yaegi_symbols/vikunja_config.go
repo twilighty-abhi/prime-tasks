@@ -188,6 +188,7 @@ func init() {
 		"ServiceMaxAvatarSize":                       reflect.ValueOf(config.ServiceMaxAvatarSize),
 		"ServiceMaxItemsPerPage":                     reflect.ValueOf(config.ServiceMaxItemsPerPage),
 		"ServiceMotd":                                reflect.ValueOf(config.ServiceMotd),
+		"ServiceOrgDirectory":                        reflect.ValueOf(config.ServiceOrgDirectory),
 		"ServicePublicURL":                           reflect.ValueOf(config.ServicePublicURL),
 		"ServiceRootpath":                            reflect.ValueOf(config.ServiceRootpath),
 		"ServiceSecret":                              reflect.ValueOf(config.ServiceSecret),

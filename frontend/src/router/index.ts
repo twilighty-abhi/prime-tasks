@@ -319,6 +319,14 @@ const router = createRouter({
 			},
 		},
 		{
+			path: '/projects/:projectId(\\d+)/settings/leave',
+			name: 'project.settings.leave',
+			component: () => import('@/views/project/settings/ProjectSettingsLeave.vue'),
+			meta: {
+				showAsModal: true,
+			},
+		},
+		{
 			path: '/projects/:projectId/settings/archive',
 			name: 'project.settings.archive',
 			component: () => import('@/views/project/settings/ProjectSettingsArchive.vue'),

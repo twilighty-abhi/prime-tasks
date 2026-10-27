@@ -459,6 +459,12 @@
       "tasksAndChildProjectsToDelete": "This will irrevocably remove approx. {tasks} tasks and {projects} projects.",
       "noTasksToDelete": "This project does not contain any tasks, it should be safe to delete."
     },
+    "leave": {
+      "title": "Leave \"{project}\"",
+      "header": "Leave this project",
+      "text": "You will lose access to \"{project}\" and the projects under it, unless a team or another share still gives you access. To get back in, a project admin has to share it with you again.",
+      "success": "You left the project."
+    },
     "duplicate": {
       "title": "Duplicate this project",
       "label": "Duplicate",
@@ -1493,7 +1499,8 @@
     "createProject": "Create project",
     "cantArchiveIsDefault": "You cannot archive this because it is your default project.",
     "cantDeleteIsDefault": "You cannot delete this because it is your default project.",
-    "views": "Views"
+    "views": "Views",
+    "leave": "Leave project"
   },
   "apiConfig": {
     "url": "Vikunja URL",

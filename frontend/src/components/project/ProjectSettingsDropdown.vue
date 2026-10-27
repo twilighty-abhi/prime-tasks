@@ -111,6 +111,10 @@
 				{{ $t('menu.createProject') }}
 			</DropdownItem>
 			<slot name="before-delete" />
+			<LeaveProjectDropdownItem
+				:project-id="project.id"
+				:owner-id="project.owner?.id"
+			/>
 			<DropdownItem
 				v-if="forceAllActions || project.max_permission === PERMISSIONS.ADMIN"
 				v-tooltip="isDefaultProject ? $t('menu.cantDeleteIsDefault') : ''"
@@ -132,6 +136,7 @@ import BaseButton from '@/components/base/BaseButton.vue'
 import Dropdown from '@/components/misc/Dropdown.vue'
 import DropdownItem from '@/components/misc/DropdownItem.vue'
 import Subscription from '@/components/misc/Subscription.vue'
+import LeaveProjectDropdownItem from '@/components/project/LeaveProjectDropdownItem.vue'
 import type {Project} from '@/client/generated'
 
 import {isSavedFilterProject, useSetProjectSubscriptionMutation} from '@/client/queries/projects'

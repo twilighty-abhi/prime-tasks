@@ -7476,6 +7476,33 @@ export type SharesCreateResponses = {
 
 export type SharesCreateResponse = SharesCreateResponses[keyof SharesCreateResponses];
 
+export type ProjectSharesLeaveData = {
+    body?: never;
+    path: {
+        project: number;
+    };
+    query?: never;
+    url: '/projects/{project}/shares/me';
+};
+
+export type ProjectSharesLeaveErrors = {
+    /**
+     * Error
+     */
+    default: VikunjaErrorModel;
+};
+
+export type ProjectSharesLeaveError = ProjectSharesLeaveErrors[keyof ProjectSharesLeaveErrors];
+
+export type ProjectSharesLeaveResponses = {
+    /**
+     * No Content
+     */
+    204: void;
+};
+
+export type ProjectSharesLeaveResponse = ProjectSharesLeaveResponses[keyof ProjectSharesLeaveResponses];
+
 export type SharesDeleteData = {
     body?: never;
     path: {
