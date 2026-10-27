@@ -31,11 +31,18 @@ describe('Logo.vue', () => {
 		expect(wrapper.find('img').exists()).toBe(false)
 	})
 
+	it('renders the prime-tasks wordmark without a custom logo', () => {
+		const wrapper = mount(Logo)
+
+		expect(wrapper.find('.logo-wordmark').text()).toBe('prime-tasks')
+	})
+
 	it('renders the custom logo as img', () => {
 		window.CUSTOM_LOGO_URL = 'https://example.com/logo.png'
 
 		const wrapper = mount(Logo)
 
 		expect(wrapper.find('img').attributes('src')).toBe('https://example.com/logo.png')
+		expect(wrapper.find('img').attributes('alt')).toBe('prime-tasks')
 	})
 })

@@ -18,6 +18,7 @@ vi.mock('@/composables/useProjects', () => ({
 import ProjectSettingsArchive from '@/views/project/settings/ProjectSettingsArchive.vue'
 import Modal from '@/components/misc/Modal.vue'
 import testid from '@/directives/testid'
+import {PRODUCT_NAME} from '@/constants/product'
 import enMessages from '@/i18n/lang/en.json'
 
 const i18n = createI18n({legacy: false, locale: 'en', messages: {en: enMessages}})
@@ -95,7 +96,7 @@ describe('ProjectSettingsArchive', () => {
 		wrapper = mounted.wrapper
 
 		expect(document.querySelector('dialog.modal-dialog')?.textContent).toContain('Un-Archive this project')
-		expect(document.title).toBe('Archive "Test" | Vikunja')
+		expect(document.title).toBe(`Archive "Test" | ${PRODUCT_NAME}`)
 
 		await mounted.router.push('/tasks/by/upcoming')
 		await flushPromises()
