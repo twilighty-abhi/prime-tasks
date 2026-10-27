@@ -47,6 +47,7 @@ func RegisterListeners() {
 	events.RegisterListener((&TaskCreatedEvent{}).Name(), &HandleTaskCreateMentions{})
 	events.RegisterListener((&TaskUpdatedEvent{}).Name(), &HandleTaskUpdatedMentions{})
 	events.RegisterListener((&UserDataExportRequestedEvent{}).Name(), &HandleUserDataExport{})
+	events.RegisterListener((&user.CreatedEvent{}).Name(), &AutoJoinTeamsByEmailDomain{}) // prime-tasks F6
 	events.RegisterListener((&TaskCommentCreatedEvent{}).Name(), &HandleTaskUpdateLastUpdated{})
 	events.RegisterListener((&TaskCommentUpdatedEvent{}).Name(), &HandleTaskUpdateLastUpdated{})
 	events.RegisterListener((&TaskCommentDeletedEvent{}).Name(), &HandleTaskUpdateLastUpdated{})
