@@ -17,6 +17,7 @@
 package models
 
 import (
+	"maps"
 	"testing"
 
 	"code.vikunja.io/api/pkg/db"
@@ -50,6 +51,7 @@ const (
 	matrixCreateView       matrixAction = "create view"
 	matrixManageLinkShares matrixAction = "manage link shares"
 	matrixRemoveShare      matrixAction = "remove a share"
+	matrixRemoveOwnShare   matrixAction = "remove own share"
 )
 
 var matrixPermissionNames = map[Permission]string{
@@ -65,6 +67,7 @@ var matrixActions = []matrixAction{
 	matrixCreateView,
 	matrixManageLinkShares,
 	matrixRemoveShare,
+	matrixRemoveOwnShare,
 }
 
 type matrixFixture struct {
@@ -170,6 +173,11 @@ func runMatrixAction(t *testing.T, s *xorm.Session, action matrixAction, f matri
 			ProjectID: f.projectID,
 			Username:  "user3",
 		}).CanDelete(s, doer)
+	case matrixRemoveOwnShare:
+		can, err = (&ProjectUser{
+			ProjectID: f.projectID,
+			Username:  doer.Username,
+		}).CanDelete(s, doer)
 	default:
 		t.Fatalf("unknown action %q", action)
 	}
@@ -185,6 +193,7 @@ func TestProjectPermissionMatrix(t *testing.T) {
 		matrixCreateView:       false,
 		matrixManageLinkShares: false,
 		matrixRemoveShare:      false,
+		matrixRemoveOwnShare:   false,
 	}
 	readWrite := map[matrixAction]bool{
 		matrixReadProject:      true,
@@ -193,6 +202,7 @@ func TestProjectPermissionMatrix(t *testing.T) {
 		matrixCreateView:       false,
 		matrixManageLinkShares: false,
 		matrixRemoveShare:      false,
+		matrixRemoveOwnShare:   false,
 	}
 	admin := map[matrixAction]bool{
 		matrixReadProject:      true,
@@ -201,6 +211,7 @@ func TestProjectPermissionMatrix(t *testing.T) {
 		matrixCreateView:       true,
 		matrixManageLinkShares: true,
 		matrixRemoveShare:      true,
+		matrixRemoveOwnShare:   true,
 	}
 	nothing := map[matrixAction]bool{
 		matrixReadProject:      false,
@@ -209,6 +220,14 @@ func TestProjectPermissionMatrix(t *testing.T) {
 		matrixCreateView:       false,
 		matrixManageLinkShares: false,
 		matrixRemoveShare:      false,
+		matrixRemoveOwnShare:   false,
+	}
+
+	// F4: a direct share can always be removed by its own user ("leave project").
+	directShare := func(want map[matrixAction]bool) map[matrixAction]bool {
+		out := maps.Clone(want)
+		out[matrixRemoveOwnShare] = true
+		return out
 	}
 
 	// Rows are upstream behaviour. A prime-tasks fix that changes access edits or adds rows here.
@@ -224,12 +243,12 @@ func TestProjectPermissionMatrix(t *testing.T) {
 		{
 			source:     matrixGrantUser,
 			permission: PermissionRead,
-			want:       readOnly,
+			want:       directShare(readOnly),
 		},
 		{
 			source:     matrixGrantUser,
 			permission: PermissionWrite,
-			want:       readWrite,
+			want:       directShare(readWrite),
 		},
 		{
 			source:     matrixGrantUser,
