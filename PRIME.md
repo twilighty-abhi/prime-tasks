@@ -29,6 +29,7 @@ Rules for the fork:
 | B2 | Test fixtures load on Windows (`path.Join` for `embed.FS` paths) | [#1](https://github.com/twilighty-abhi/prime-tasks/pull/1) | none (test tooling) | not sent yet; good upstream candidate |
 | F9 | Permission test matrix for project access (`pkg/models/project_permission_matrix_test.go`) | [#1](https://github.com/twilighty-abhi/prime-tasks/pull/1) | none (tests only) | fork-only |
 | F1 | Org directory mode: user search matches part of the name, username or email of any non-bot user | [#2](https://github.com/twilighty-abhi/prime-tasks/pull/2) | `service.orgdirectory` (default `false`; on in `deploy/config.yml`) | fork-only for now |
+| F6 | Auto-join teams: new users join teams by email domain (listener on `user.created`) | [#4](https://github.com/twilighty-abhi/prime-tasks/pull/4) | `service.autojointeams` (default empty; commented example in `deploy/config.yml`) | fork-only for now |
 
 ## Merging a new upstream release
 
