@@ -30,6 +30,7 @@ Rules for the fork:
 | Y1 | Yuyu theme layer: tokens, Vikunja variables mapped onto them, self-hosted fonts, component rules, `PRODUCT_NAME` branding | [#5](https://github.com/twilighty-abhi/prime-tasks/pull/5) | none (branding) | fork-only |
 | F9 | Permission test matrix for project access (`pkg/models/project_permission_matrix_test.go`) | [#1](https://github.com/twilighty-abhi/prime-tasks/pull/1) | none (tests only) | fork-only |
 | F4 | Leave project: `DELETE /api/v2/projects/{project}/shares/me`, self-removal in `ProjectUser.CanDelete`, "Leave project" in the project menu | [#3](https://github.com/twilighty-abhi/prime-tasks/pull/3) | none (new endpoint and menu item; removing anyone else stays admin-only) | fork-only for now |
+| F3 | Shared indicator: `shared_via` and `owner_display_name` on v2 projects; sidebar Shared with me section, Shared badge, All / Personal / Shared filter | [#6](https://github.com/twilighty-abhi/prime-tasks/pull/6) | none (new fields and UI) | fork-only for now |
 | F1 | Org directory mode: user search matches part of the name, username or email of any non-bot user | [#2](https://github.com/twilighty-abhi/prime-tasks/pull/2) | `service.orgdirectory` (default `false`; on in `deploy/config.yml`) | fork-only for now |
 
 ## Merging a new upstream release
