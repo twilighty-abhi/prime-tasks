@@ -35,6 +35,7 @@ func init() {
 		"AuthLocalEnabled":                           reflect.ValueOf(config.AuthLocalEnabled),
 		"AuthOpenIDEnabled":                          reflect.ValueOf(config.AuthOpenIDEnabled),
 		"AuthOpenIDProviders":                        reflect.ValueOf(config.AuthOpenIDProviders),
+		"AutoJoinTeamRules":                          reflect.ValueOf(config.AutoJoinTeamRules),
 		"AutoTLSEmail":                               reflect.ValueOf(config.AutoTLSEmail),
 		"AutoTLSEnabled":                             reflect.ValueOf(config.AutoTLSEnabled),
 		"AutoTLSRenewBefore":                         reflect.ValueOf(config.AutoTLSRenewBefore),
@@ -139,6 +140,7 @@ func init() {
 		"MigrationVikunjaFileMaxFiles":               reflect.ValueOf(config.MigrationVikunjaFileMaxFiles),
 		"MigrationVikunjaFileMaxSize":                reflect.ValueOf(config.MigrationVikunjaFileMaxSize),
 		"MigrationVikunjaFileMaxUserStorage":         reflect.ValueOf(config.MigrationVikunjaFileMaxUserStorage),
+		"NormalizeEmailDomain":                       reflect.ValueOf(config.NormalizeEmailDomain),
 		"OutgoingRequestsAllowNonRoutableIPs":        reflect.ValueOf(config.OutgoingRequestsAllowNonRoutableIPs),
 		"OutgoingRequestsProxyPassword":              reflect.ValueOf(config.OutgoingRequestsProxyPassword),
 		"OutgoingRequestsProxyURL":                   reflect.ValueOf(config.OutgoingRequestsProxyURL),
@@ -165,6 +167,7 @@ func init() {
 		"SentryFrontendDsn":                          reflect.ValueOf(config.SentryFrontendDsn),
 		"SentryFrontendEnabled":                      reflect.ValueOf(config.SentryFrontendEnabled),
 		"ServiceAllowIconChanges":                    reflect.ValueOf(config.ServiceAllowIconChanges),
+		"ServiceAutoJoinTeams":                       reflect.ValueOf(config.ServiceAutoJoinTeams),
 		"ServiceBcryptRounds":                        reflect.ValueOf(config.ServiceBcryptRounds),
 		"ServiceCustomLogoURL":                       reflect.ValueOf(config.ServiceCustomLogoURL),
 		"ServiceCustomLogoURLDark":                   reflect.ValueOf(config.ServiceCustomLogoURLDark),
@@ -206,6 +209,7 @@ func init() {
 		"WebhooksTimeoutSeconds":                     reflect.ValueOf(config.WebhooksTimeoutSeconds),
 
 		// type definitions
-		"Key": reflect.ValueOf((*config.Key)(nil)),
+		"AutoJoinTeamRule": reflect.ValueOf((*config.AutoJoinTeamRule)(nil)),
+		"Key":              reflect.ValueOf((*config.Key)(nil)),
 	}
 }

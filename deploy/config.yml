@@ -13,6 +13,11 @@ service:
   enablelinksharing: false
   # prime-tasks F1: teammates find each other by part of a name, username or email
   orgdirectory: true
+  # prime-tasks F6: add new users to teams by their email domain. Create the teams first,
+  # then put their ids here (Teams page URL: /teams/<id>/edit).
+  # autojointeams:
+  #   - domain: "example.org"
+  #     team_id: 1
   # Caddy sits in front on the compose network
   ipextractionmethod: "xff"
   trustedproxies: "172.16.0.0/12"

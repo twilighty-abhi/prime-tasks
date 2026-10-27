@@ -72,6 +72,7 @@ const (
 	ServiceBcryptRounds                   Key = `service.bcryptrounds`
 	ServiceEnableOpenIDTeamUserOnlySearch Key = `service.enableopenidteamusersearch`
 	ServiceOrgDirectory                   Key = `service.orgdirectory`
+	ServiceAutoJoinTeams                  Key = `service.autojointeams`
 	ServiceIPExtractionMethod             Key = `service.ipextractionmethod`
 	ServiceTrustedProxies                 Key = `service.trustedproxies`
 
@@ -401,6 +402,7 @@ func initDefaultConfig() {
 	ServiceBcryptRounds.setDefault(11)
 	ServiceEnableOpenIDTeamUserOnlySearch.setDefault(false)
 	ServiceOrgDirectory.setDefault(false)
+	ServiceAutoJoinTeams.setDefault([]interface{}{})
 	ServiceIPExtractionMethod.setDefault("direct")
 	ServiceTrustedProxies.setDefault("")
 
