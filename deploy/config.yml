@@ -11,6 +11,8 @@ service:
   # Phase 0
   enablepublicteams: true
   enablelinksharing: false
+  # prime-tasks F1: teammates find each other by part of a name, username or email
+  orgdirectory: true
   # Caddy sits in front on the compose network
   ipextractionmethod: "xff"
   trustedproxies: "172.16.0.0/12"

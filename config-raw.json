@@ -154,6 +154,11 @@
                     "comment": "If enabled, users will only find other users who are part of an existing team when they are searching for a user by their partial name. The other existing team may be created from openid. It is still possible to add users to teams with their exact email address even when this is enabled."
                 },
                 {
+                    "key": "orgdirectory",
+                    "default_value": "false",
+                    "comment": "prime-tasks: org directory mode. If enabled, every signed-in user who is not a bot can find every other user who is not a bot by part of their name, username or email, regardless of their discoverable_by_name and discoverable_by_email settings and of enableopenidteamusersearch. Link shares and bots keep the normal rules. Partial matching needs at least 2 characters and returns at most 20 users. Meant for a single organisation where everyone should be able to share with everyone."
+                },
+                {
                     "key": "ipextractionmethod",
                     "default_value": "direct",
                     "comment": "Method for extracting client IP addresses. 'direct' (default) uses the TCP remote address and ignores forwarding headers — use this when Vikunja faces the internet directly. 'xff' extracts from the X-Forwarded-For header — use this behind proxies like nginx, Traefik, or cloud load balancers. 'realip' extracts from the X-Real-IP header, but only honours it when the header value itself falls into a trusted range (loopback, private networks or 'service.trustedproxies') — it does not check who sent the header, so it cannot report public client IPs. Prefer 'xff' behind a reverse proxy. When using 'xff' or 'realip', configure 'service.trustedproxies' with your proxy CIDR ranges."

@@ -17,7 +17,9 @@
 package user
 
 import (
+	"fmt"
 	"strings"
+	"unicode/utf8"
 
 	"code.vikunja.io/api/pkg/config"
 
@@ -27,6 +29,12 @@ import (
 	"xorm.io/xorm"
 	"xorm.io/xorm/schemas"
 )
+
+// OrgDirectorySearchLimit caps the users one org directory search returns (service.orgdirectory).
+const OrgDirectorySearchLimit = 20
+
+// orgDirectoryMinQueryLength keeps a one-letter query from listing most of the organisation.
+const orgDirectoryMinQueryLength = 2
 
 type ProjectUserOpts struct {
 	AdditionalCond              builder.Cond
@@ -61,6 +69,11 @@ func ListUsers(s *xorm.Session, search string, currentUser *User, opts *ProjectU
 		return
 	}
 
+	orgDirectory, err := orgDirectoryApplies(s, currentUser, opts)
+	if err != nil {
+		return nil, err
+	}
+
 	conds := []builder.Cond{}
 
 	// Subquery: find user IDs that share an external team with the current user
@@ -86,6 +99,14 @@ func ListUsers(s *xorm.Session, search string, currentUser *User, opts *ProjectU
 					db.ILIKE("email", queryPart),
 				)
 				continue
+			}
+
+			if orgDirectory && utf8.RuneCountInString(strings.TrimSpace(queryPart)) >= orgDirectoryMinQueryLength {
+				conds = append(conds,
+					db.ILIKE("name", queryPart),
+					db.ILIKE("username", queryPart),
+					db.ILIKE("email", queryPart),
+				)
 			}
 
 			var usernameCond builder.Cond = builder.Eq{"username": queryPart}
@@ -132,7 +153,7 @@ func ListUsers(s *xorm.Session, search string, currentUser *User, opts *ProjectU
 		)
 	}
 
-	if config.ServiceEnableOpenIDTeamUserOnlySearch.GetBool() {
+	if config.ServiceEnableOpenIDTeamUserOnlySearch.GetBool() && !orgDirectory {
 		teamMemberCond := builder.In("id", builder.Select("user_id").
 			From("team_members").
 			Where(builder.In("team_id",
@@ -194,13 +215,18 @@ func ListUsers(s *xorm.Session, search string, currentUser *User, opts *ProjectU
 		)
 	}
 
-	err = s.
+	query := s.
 		Where(builder.Or(
 			builder.And(cond, notSomeoneElsesBot),
 			ownBotCond,
-		)).
-		OrderBy("id").
-		Find(&users)
+		))
+	if orgDirectory {
+		// Rank exact and prefix matches first so the cap cuts the weakest matches.
+		order, args := db.SearchRelevanceOrder(strings.TrimSpace(queryParts[0]), "username", "name", "email")
+		query = query.OrderBy(order, args...).Limit(OrgDirectorySearchLimit)
+	}
+	query = query.OrderBy("id")
+	err = query.Find(&users)
 
 outer:
 	for _, u := range users {
@@ -212,6 +238,21 @@ outer:
 		u.Email = ""
 	}
 	return
+}
+
+// orgDirectoryApplies reports whether service.orgdirectory widens this search:
+// only the global search (not the fuzzy per-project listing), and only for real users.
+// The bot check reads the database because the auth user may not carry bot_owner_id.
+func orgDirectoryApplies(s *xorm.Session, currentUser *User, opts *ProjectUserOpts) (bool, error) {
+	if !config.ServiceOrgDirectory.GetBool() || opts.MatchFuzzily {
+		return false, nil
+	}
+	searcher := &User{}
+	exists, err := s.Where(builder.Eq{"id": currentUser.ID}).Cols("bot_owner_id").Get(searcher)
+	if err != nil {
+		return false, fmt.Errorf("org directory: load searching user: %w", err)
+	}
+	return exists && !searcher.IsBot(), nil
 }
 
 // ListAllUsers returns all users

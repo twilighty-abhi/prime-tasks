@@ -37,7 +37,7 @@ func RegisterUserSearchRoutes(api huma.API) {
 	Register(api, huma.Operation{
 		OperationID: "users-search",
 		Summary:     "Search users",
-		Description: "Searches users by username, name or full email. Matching by name or email requires the target user to have made themselves discoverable, unless both users share an external (OIDC/LDAP) team. Email addresses are never returned.",
+		Description: "Searches users by username, name or full email. Matching by name or email requires the target user to have made themselves discoverable, unless both users share an external (OIDC/LDAP) team. When the server runs with service.orgdirectory, every non-bot user can find every other non-bot user by part of their name, username or email (at least 2 characters, at most 20 results). Email addresses are never returned.",
 		Method:      http.MethodGet,
 		Path:        "/users",
 		Tags:        []string{"user"},
