@@ -23,6 +23,7 @@
 				:to="{ name: 'project.index', params: { projectId: project.id} }"
 				class="list-menu-link"
 				:class="{'router-link-exact-active': currentProject?.id === project.id}"
+				:aria-current="currentProject?.id === project.id ? 'page' : undefined"
 			>
 				<span
 					v-if="!canCollapse || childProjects?.length === 0"
@@ -51,6 +52,13 @@
 					</span>
 				</div>
 				<span class="project-menu-title">{{ getProjectTitle(project) }}</span>
+				<!-- prime-tasks F3: a word, not just a colour, says the project is shared with you -->
+				<span
+					v-if="hasSharedBadge(project)"
+					v-tooltip="sharedDescription"
+					class="tag shared-badge"
+					:aria-label="sharedDescription"
+				>{{ $t('project.sharedBadge') }}</span>
 			</BaseButton>
 			<BaseButton
 				v-if="canToggleFavorite"
@@ -93,6 +101,7 @@
 <script setup lang="ts">
 import {computed, ref, onUnmounted, watch} from 'vue'
 import {useProjects} from '@/composables/useProjects'
+import {hasSharedBadge, sharedViaDescription} from '@/helpers/projectSharing'
 import {useCurrentProject} from '@/composables/useCurrentProject'
 import {useTaskDragState} from '@/composables/useTaskDragState'
 import {useDelayedLoading} from '@/composables/useDelayedLoading'
@@ -112,6 +121,7 @@ import {
 	usePatchProjectFavoriteMutation,
 } from '@/client/queries/projects'
 import {usePatchSavedFilterFavoriteMutation} from '@/client/queries/savedFilters'
+import {useI18n} from 'vue-i18n'
 
 const props = defineProps<{
 	project: ProjectResponse,
@@ -121,6 +131,9 @@ const props = defineProps<{
 }>()
 
 const showLoading = useDelayedLoading(() => props.isLoading)
+
+const {t} = useI18n({useScope: 'global'})
+const sharedDescription = computed(() => sharedViaDescription(props.project, t))
 
 const {draggedTask} = useTaskDragState()
 const isHoveredDuringDrag = ref(false)
@@ -299,6 +312,14 @@ async function toggleProjectFavorite() {
 .project-menu-title {
 	overflow: hidden;
 	text-overflow: ellipsis;
+}
+
+.shared-badge {
+	flex-shrink: 0;
+	margin-inline: var(--yy-space-2) 0;
+	block-size: 20px;
+	padding-inline: var(--yy-space-2);
+	font-size: 12px;
 }
 
 .saved-filter-icon {

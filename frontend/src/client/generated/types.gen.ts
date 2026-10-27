@@ -1532,6 +1532,10 @@ export type Project = {
      */
     readonly owner?: User;
     /**
+     * The owner's display name: their name, or their username when they haven't set one.
+     */
+    readonly owner_display_name?: string;
+    /**
      * The id of the parent project, or 0 for a top-level project. Always present in responses. Omit it on a write to leave the parent unchanged; sending an explicit 0 detaches the project to the top level and requires admin permission.
      */
     parent_project_id?: number | null;
@@ -1539,6 +1543,10 @@ export type Project = {
      * The position of this project when listing all projects. See the tasks.position property for how positions work.
      */
     position?: number;
+    /**
+     * How this project is shared with you, when it isn't in your own tree. Absent for projects you own or that sit under a project you own.
+     */
+    readonly shared_via?: ProjectSharedVia;
     /**
      * The requesting user's subscription status for this project. Read-only here; use the subscription endpoints to change it. Only returned when retrieving a single project.
      */
@@ -1626,6 +1634,10 @@ export type ProjectReadBody = {
      */
     readonly owner?: User;
     /**
+     * The owner's display name: their name, or their username when they haven't set one.
+     */
+    readonly owner_display_name?: string;
+    /**
      * The id of the parent project, or 0 for a top-level project. Always present in responses. Omit it on a write to leave the parent unchanged; sending an explicit 0 detaches the project to the top level and requires admin permission.
      */
     parent_project_id?: number | null;
@@ -1633,6 +1645,10 @@ export type ProjectReadBody = {
      * The position of this project when listing all projects. See the tasks.position property for how positions work.
      */
     position?: number;
+    /**
+     * How this project is shared with you, when it isn't in your own tree. Absent for projects you own or that sit under a project you own.
+     */
+    readonly shared_via?: ProjectSharedVia;
     /**
      * The requesting user's subscription status for this project. Read-only here; use the subscription endpoints to change it. Only returned when retrieving a single project.
      */
@@ -1649,6 +1665,33 @@ export type ProjectReadBody = {
      * The views configured for this project. Managed through the project view endpoints.
      */
     readonly views?: Array<ProjectView> | null;
+};
+
+export type ProjectSharedVia = {
+    /**
+     * For parent: the ancestor project that is shared with you.
+     */
+    parent_project_id?: number;
+    /**
+     * The title of that ancestor project.
+     */
+    parent_project_title?: string;
+    /**
+     * The permission this share gives you: 0 = read, 1 = read & write, 2 = admin.
+     */
+    permission?: number;
+    /**
+     * For team, and for parent when the parent is shared with a team: the team.
+     */
+    team_id?: number;
+    /**
+     * The name of that team.
+     */
+    team_name?: string;
+    /**
+     * How the project is shared with you: direct (shared with you as a user), team (shared with one of your teams) or parent (you have access to a parent project).
+     */
+    type?: 'direct' | 'team' | 'parent';
 };
 
 export type ProjectUser = {

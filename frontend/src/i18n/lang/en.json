@@ -401,6 +401,13 @@
     }
   },
   "project": {
+    "sharedBadge": "Shared",
+    "sharedVia": {
+      "direct": "Shared by {owner} with you",
+      "team": "Shared by {owner} with the team {team}",
+      "parent": "Shared by {owner} through \"{parent}\"",
+      "someone": "someone"
+    },
     "archivedMessage": "This project is archived. It is not possible to create new or edit tasks for it.",
     "archived": "Archived",
     "showArchived": "Show Archived",
@@ -860,6 +867,13 @@
     "retry": "Retry"
   },
   "navigation": {
+    "sharedWithMe": "Shared with me",
+    "projectFilter": {
+      "label": "Show projects",
+      "all": "All",
+      "personal": "Personal",
+      "shared": "Shared"
+    },
     "overview": "Overview",
     "upcoming": "Upcoming",
     "settings": "Settings",

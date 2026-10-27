@@ -114,12 +114,37 @@
 				/>
 			</nav>
 
+			<!-- prime-tasks F3: All / Personal / Shared, and a "Shared with me" section -->
+			<ProjectFilterSwitch
+				v-if="sharedProjectCount > 0"
+				v-model="projectFilter"
+			/>
+
 			<nav
+				v-if="rootProjects.personal.length > 0 || projectFilter !== 'shared'"
 				class="menu"
 				:aria-label="$t('project.projects')"
 			>
 				<ProjectsNavigation
-					:model-value="projects"
+					:model-value="rootProjects.personal"
+					:can-edit-order="true"
+					:can-collapse="true"
+				/>
+			</nav>
+
+			<nav
+				v-if="rootProjects.shared.length > 0"
+				class="menu shared-projects"
+				:aria-labelledby="sharedHeadingId"
+			>
+				<p
+					:id="sharedHeadingId"
+					class="menu-label shared-projects__heading"
+				>
+					{{ $t('navigation.sharedWithMe') }}
+				</p>
+				<ProjectsNavigation
+					:model-value="rootProjects.shared"
 					:can-edit-order="true"
 					:can-collapse="true"
 				/>
@@ -141,7 +166,8 @@
 </template>
 
 <script setup lang="ts">
-import {computed} from 'vue'
+import {computed, useId} from 'vue'
+import {useStorage} from '@vueuse/core'
 
 import {SHORTCUTS} from '@/constants/shortcuts'
 import PoweredByLink from '@/components/home/PoweredByLink.vue'
@@ -153,6 +179,8 @@ import {useProjects} from '@/composables/useProjects'
 import {useConfigStore} from '@/stores/config'
 import {PRO_FEATURE} from '@/constants/proFeatures'
 import ProjectsNavigation from '@/components/home/ProjectsNavigation.vue'
+import ProjectFilterSwitch from '@/components/home/ProjectFilterSwitch.vue'
+import {isSharedWithMe, isSidebarProjectFilter, splitRootProjects, type SidebarProjectFilter} from '@/helpers/projectSharing'
 import {useSidebarResize} from '@/composables/useSidebarResize'
 
 const baseStore = useBaseStore()
@@ -164,6 +192,17 @@ const timeTrackingEnabled = computed(() => configStore.isProFeatureEnabled(PRO_F
 const {sidebarWidthStyle, isResizing, startResize, isMobile} = useSidebarResize()
 
 const projects = computed(() => projectList.notArchivedRootProjects)
+
+// prime-tasks F3
+const storedProjectFilter = useStorage<string>('sidebarProjectFilter', 'all')
+const projectFilter = computed<SidebarProjectFilter>({
+	get: () => isSidebarProjectFilter(storedProjectFilter.value) ? storedProjectFilter.value : 'all',
+	set: value => { storedProjectFilter.value = value },
+})
+const sharedProjectCount = computed(() => projects.value.filter(isSharedWithMe).length)
+// With nothing shared there's no filter to show, so everything stays in one list.
+const rootProjects = computed(() => splitRootProjects(projects.value, sharedProjectCount.value > 0 ? projectFilter.value : 'all'))
+const sharedHeadingId = useId()
 const favoriteProjects = computed(() => projectList.favoriteProjects)
 const savedFilterProjects = computed(() => projectList.savedFilterProjects)
 </script>
@@ -250,6 +289,15 @@ const savedFilterProjects = computed(() => projectList.savedFilterProjects)
 			padding-block-end: .25rem;
 		}
 	}
+}
+
+.shared-projects__heading {
+	margin: 0 var(--yy-space-4) var(--yy-space-2);
+	color: var(--yy-text-muted);
+	font-size: 13px;
+	font-weight: 600;
+	letter-spacing: 0;
+	text-transform: none;
 }
 
 .menu + .menu {
