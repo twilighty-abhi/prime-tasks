@@ -38,7 +38,6 @@ import (
 	"sort"
 	"strconv"
 	"strings"
-	"syscall"
 	"time"
 
 	apiv2 "code.vikunja.io/api/pkg/routes/api/v2"
@@ -302,26 +301,6 @@ func getRandomPort(ctx context.Context) (int, error) {
 	}
 	defer l.Close()
 	return l.Addr().(*net.TCPAddr).Port, nil
-}
-
-// setProcessGroup configures a command to run in its own process group,
-// so that all child processes can be killed together.
-func setProcessGroup(cmd *exec.Cmd) {
-	cmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
-}
-
-// killProcessGroup sends a signal to the entire process group of the given command.
-func killProcessGroup(cmd *exec.Cmd) error {
-	if cmd.Process == nil {
-		return nil
-	}
-	if pgid, err := syscall.Getpgid(cmd.Process.Pid); err == nil { // use best-effort to kill full process group
-		err = syscall.Kill(-pgid, syscall.SIGTERM)
-		if err != nil {
-			return err
-		}
-	}
-	return cmd.Wait()
 }
 
 // waitForHTTP polls a URL until it returns a 200 status or the timeout expires.

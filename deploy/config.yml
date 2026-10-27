@@ -1,0 +1,62 @@
+# prime-tasks config for the office VM (mounted at /etc/vikunja/config.yml).
+# Secrets and the public URL come from .env through docker-compose.yml:
+#   VIKUNJA_SERVICE_PUBLICURL, VIKUNJA_SERVICE_SECRET, VIKUNJA_DATABASE_PASSWORD
+# Full reference: config.yml.sample at the repo root (generated, don't edit).
+
+service:
+  interface: ":3456"
+  timezone: "Asia/Kolkata"
+  # Accounts come from an admin (`vikunja user create`) or, later, Google sign-in.
+  enableregistration: false
+  # Phase 0
+  enablepublicteams: true
+  enablelinksharing: false
+  # Caddy sits in front on the compose network
+  ipextractionmethod: "xff"
+  trustedproxies: "172.16.0.0/12"
+
+database:
+  type: "postgres"
+  host: "db:5432"
+  user: "vikunja"
+  database: "vikunja"
+  # Postgres max_connections is 60 in docker-compose.yml
+  maxopenconnections: 40
+  maxidleconnections: 10
+
+files:
+  basepath: "/app/vikunja/files"
+  maxsize: "50MB"
+
+defaultsettings:
+  # Phase 0: new accounts can be found by teammates. Existing accounts: see sql/flip-discoverable.sql
+  discoverable_by_name: true
+  discoverable_by_email: true
+
+mailer:
+  enabled: false
+  # host: "smtp.example.org"
+  # port: 587
+  # username: ""
+  # password: ""  # prefer VIKUNJA_MAILER_PASSWORD in .env
+  # fromemail: "tasks@example.org"
+
+log:
+  level: "INFO"
+
+auth:
+  local:
+    enabled: true
+  openid:
+    enabled: false
+    # Google sign-in. Redirect URL to register in Google Cloud: https://<PRIME_DOMAIN>/auth/openid/google
+    # Put the secret in .env as VIKUNJA_AUTH_OPENID_PROVIDERS_GOOGLE_CLIENTSECRET rather than here.
+    # providers:
+    #   google:
+    #     name: "Google"
+    #     authurl: "https://accounts.google.com"
+    #     clientid: "<client id>.apps.googleusercontent.com"
+    #     clientsecret: ""
+    #     scope: "openid email profile"
+    #     emailfallback: true
+    #     usernamefallback: true
