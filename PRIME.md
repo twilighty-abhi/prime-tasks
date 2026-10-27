@@ -29,6 +29,7 @@ Rules for the fork:
 | B2 | Test fixtures load on Windows (`path.Join` for `embed.FS` paths) | [#1](https://github.com/twilighty-abhi/prime-tasks/pull/1) | none (test tooling) | not sent yet; good upstream candidate |
 | F9 | Permission test matrix for project access (`pkg/models/project_permission_matrix_test.go`) | [#1](https://github.com/twilighty-abhi/prime-tasks/pull/1) | none (tests only) | fork-only |
 | F1 | Org directory mode: user search matches part of the name, username or email of any non-bot user | [#2](https://github.com/twilighty-abhi/prime-tasks/pull/2) | `service.orgdirectory` (default `false`; on in `deploy/config.yml`) | fork-only for now |
+| Y1 | Yuyu theme layer: tokens, Vikunja variables mapped onto them, self-hosted fonts, component rules, `PRODUCT_NAME` branding | [#5](https://github.com/twilighty-abhi/prime-tasks/pull/5) | none (branding) | fork-only |
 
 ## Merging a new upstream release
 
