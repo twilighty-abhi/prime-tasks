@@ -75,6 +75,7 @@ test.describe('Link shares', () => {
 		}
 
 		await page.reload()
+		await page.locator('details.link-sharing > summary').click()
 		await expect(row).toBeVisible()
 		await row.getByRole('button', {name: 'Remove a link share'}).click()
 		await page.locator('dialog[open]').getByRole('button', {name: 'Do it!'}).click()
