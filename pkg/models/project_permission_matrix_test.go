@@ -52,6 +52,7 @@ const (
 	matrixManageLinkShares matrixAction = "manage link shares"
 	matrixRemoveShare      matrixAction = "remove a share"
 	matrixRemoveOwnShare   matrixAction = "remove own share"
+	matrixShareAndAssign   matrixAction = "share project and assign"
 )
 
 var matrixPermissionNames = map[Permission]string{
@@ -68,6 +69,7 @@ var matrixActions = []matrixAction{
 	matrixManageLinkShares,
 	matrixRemoveShare,
 	matrixRemoveOwnShare,
+	matrixShareAndAssign,
 }
 
 type matrixFixture struct {
@@ -173,6 +175,8 @@ func runMatrixAction(t *testing.T, s *xorm.Session, action matrixAction, f matri
 			ProjectID: f.projectID,
 			Username:  "user3",
 		}).CanDelete(s, doer)
+	case matrixShareAndAssign:
+		can, err = (&TaskShareAndAssign{TaskID: f.taskID, UserID: 4}).CanCreate(s, doer)
 	case matrixRemoveOwnShare:
 		can, err = (&ProjectUser{
 			ProjectID: f.projectID,
@@ -194,6 +198,7 @@ func TestProjectPermissionMatrix(t *testing.T) {
 		matrixManageLinkShares: false,
 		matrixRemoveShare:      false,
 		matrixRemoveOwnShare:   false,
+		matrixShareAndAssign:   false,
 	}
 	readWrite := map[matrixAction]bool{
 		matrixReadProject:      true,
@@ -203,6 +208,7 @@ func TestProjectPermissionMatrix(t *testing.T) {
 		matrixManageLinkShares: false,
 		matrixRemoveShare:      false,
 		matrixRemoveOwnShare:   false,
+		matrixShareAndAssign:   false,
 	}
 	admin := map[matrixAction]bool{
 		matrixReadProject:      true,
@@ -212,6 +218,7 @@ func TestProjectPermissionMatrix(t *testing.T) {
 		matrixManageLinkShares: true,
 		matrixRemoveShare:      true,
 		matrixRemoveOwnShare:   true,
+		matrixShareAndAssign:   true,
 	}
 	nothing := map[matrixAction]bool{
 		matrixReadProject:      false,
@@ -221,6 +228,7 @@ func TestProjectPermissionMatrix(t *testing.T) {
 		matrixManageLinkShares: false,
 		matrixRemoveShare:      false,
 		matrixRemoveOwnShare:   false,
+		matrixShareAndAssign:   false,
 	}
 
 	// F4: a direct share can always be removed by its own user ("leave project").
