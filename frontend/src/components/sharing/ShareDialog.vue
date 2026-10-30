@@ -100,7 +100,7 @@
 					v-if="entry.user"
 					:user="entry.user"
 					:avatar-size="32"
-					:show-username="false"
+					:show-username="true"
 					class="share-dialog__who"
 				/>
 				<span
