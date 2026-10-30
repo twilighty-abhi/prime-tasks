@@ -3,22 +3,23 @@
 		:title="$t('project.share.header')"
 		:has-primary-action="false"
 	>
-		<template v-if="project">
-			<UserSharing
-				:project-id="project.id"
-				:user-is-admin="userIsAdmin"
-			/>
-			<TeamSharing
-				:project-id="project.id"
-				:user-is-admin="userIsAdmin"
-			/>
-		</template>
-
-		<LinkSharing
-			v-if="configStore.link_sharing_enabled && userIsAdmin"
-			:project-id="projectId"
-			class="mbs-4"
+		<ShareDialog
+			v-if="project"
+			:project-id="project.id"
+			:user-is-admin="userIsAdmin"
 		/>
+
+		<!-- prime-tasks F5: link sharing still works, but out of the way (it's off in deploy/config.yml) -->
+		<details
+			v-if="configStore.link_sharing_enabled && userIsAdmin"
+			class="link-sharing mbs-4"
+		>
+			<summary>{{ $t('project.share.links.title') }}</summary>
+			<LinkSharing
+				:project-id="projectId"
+				class="mbs-4"
+			/>
+		</details>
 	</CreateEdit>
 </template>
 
@@ -34,8 +35,7 @@ import {PERMISSIONS} from '@/constants/permissions'
 
 import CreateEdit from '@/components/misc/CreateEdit.vue'
 import LinkSharing from '@/components/sharing/LinkSharing.vue'
-import TeamSharing from '@/components/sharing/TeamSharing.vue'
-import UserSharing from '@/components/sharing/UserSharing.vue'
+import ShareDialog from '@/components/sharing/ShareDialog.vue'
 
 import {useBaseStore} from '@/stores/base'
 import {useConfigStore} from '@/stores/config'
@@ -63,3 +63,11 @@ watchEffect(() => {
 	if (project.value) baseStore.setCurrentProject(project.value)
 })
 </script>
+
+<style lang="scss" scoped>
+.link-sharing > summary {
+	cursor: pointer;
+	color: var(--yy-text-secondary);
+	font-weight: 600;
+}
+</style>

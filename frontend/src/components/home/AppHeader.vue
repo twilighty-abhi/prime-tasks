@@ -53,6 +53,17 @@
 					</BaseButton>
 				</template>
 			</ProjectSettingsDropdown>
+
+			<!-- prime-tasks F5: one Share dialog for people and teams -->
+			<XButton
+				v-if="currentProject.id > 0"
+				v-cy="'projectShareButton'"
+				variant="secondary"
+				class="is-small project-share-button"
+				:to="{ name: 'project.settings.share', params: { projectId: currentProject.id } }"
+			>
+				{{ $t('project.share.share') }}
+			</XButton>
 		</div>
 
 		<div
@@ -266,6 +277,11 @@ $user-dropdown-width-mobile: 5rem;
 	@media screen and (min-width: $tablet) {
 		font-size: 1.75rem;
 	}
+}
+
+.project-share-button {
+	flex-shrink: 0;
+	margin-inline-start: var(--yy-space-2);
 }
 
 .project-title-dropdown {

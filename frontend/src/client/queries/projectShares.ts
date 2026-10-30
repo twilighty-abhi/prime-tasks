@@ -1,6 +1,6 @@
 import {queryOptions, useMutation, type QueryClient} from '@tanstack/vue-query'
-import {projectUsersList, projectUsersCreate, projectUsersUpdate, projectUsersDelete, projectTeamsList, projectTeamsCreate, projectTeamsUpdate, projectTeamsDelete, projectSharesLeave} from '@/client/generated'
-import type {UserWithPermission, TeamWithPermission} from '@/client/generated'
+import {projectAccessList, projectUsersList, projectUsersCreate, projectUsersUpdate, projectUsersDelete, projectTeamsList, projectTeamsCreate, projectTeamsUpdate, projectTeamsDelete, projectSharesLeave} from '@/client/generated'
+import type {UserWithPermission, TeamWithPermission, ProjectAccessEntry} from '@/client/generated'
 import {contextMutationOptions} from './contextMutation'
 import {fetchAllPages} from './fetchAllPages'
 import {projectKeys} from './projects'
@@ -12,7 +12,10 @@ import {removeProjectFromHistory} from '@/modules/projectHistory'
 export const projectShareKeys = {
 	users: (projectId: number) => ['project-shares', projectId, 'users'] as const,
 	teams: (projectId: number) => ['project-shares', projectId, 'teams'] as const,
+	access: (projectId: number) => ['project-shares', projectId, 'access'] as const,
 }
+
+export type {ProjectAccessEntry}
 
 export function normalizeSharePermission(permission: unknown): Permission {
 	return permission === PERMISSIONS.ADMIN || permission === PERMISSIONS.READ_WRITE ? permission : PERMISSIONS.READ
@@ -21,6 +24,7 @@ export function normalizeSharePermission(permission: unknown): Permission {
 async function invalidateShares(client: QueryClient, projectId: number, kind: 'users' | 'teams') {
 	await Promise.all([
 		client.invalidateQueries({queryKey: projectShareKeys[kind](projectId)}),
+		client.invalidateQueries({queryKey: projectShareKeys.access(projectId)}),
 		client.invalidateQueries({queryKey: projectKeys.detail(projectId)}),
 		client.invalidateQueries({queryKey: projectKeys.list(), refetchType: 'none'}),
 		client.invalidateQueries({queryKey: userSearchKeys.all, refetchType: 'none'}),
@@ -37,6 +41,14 @@ function shareSuccess(kind: 'users' | 'teams', action: 'addedSuccess' | 'updated
 type UserShareInput = {projectId: number, username: string}
 type TeamShareInput = {projectId: number, teamId: number}
 
+// prime-tasks F5: everyone with access and why, including what comes from parent projects.
+export function projectAccessQuery(projectId: number) {
+	return queryOptions({
+		queryKey: projectShareKeys.access(projectId),
+		queryFn: async ({signal}) => (await projectAccessList({path: {project: projectId}, signal})).data.items ?? [],
+	})
+}
+
 export function projectUserSharesQuery(projectId: number) {
 	return queryOptions({
 		queryKey: projectShareKeys.users(projectId),
@@ -46,7 +58,8 @@ export function projectUserSharesQuery(projectId: number) {
 
 export function createProjectUserShareMutationOptions() {
 	return contextMutationOptions({
-		mutationFn: async ({projectId, username}: UserShareInput) => (await projectUsersCreate({path: {project: projectId}, body: {username}})).data,
+		mutationFn: async ({projectId, username, permission}: UserShareInput & {permission?: Permission}) =>
+			(await projectUsersCreate({path: {project: projectId}, body: {username, ...(permission === undefined ? {} : {permission})}})).data,
 		onSettled: ({projectId}, client) => invalidateShares(client, projectId, 'users'),
 		successMessage: () => shareSuccess('users', 'addedSuccess'),
 	})
@@ -86,7 +99,8 @@ export function projectTeamSharesQuery(projectId: number) {
 
 export function createProjectTeamShareMutationOptions() {
 	return contextMutationOptions({
-		mutationFn: async ({projectId, teamId}: TeamShareInput) => (await projectTeamsCreate({path: {project: projectId}, body: {team_id: teamId}})).data,
+		mutationFn: async ({projectId, teamId, permission}: TeamShareInput & {permission?: Permission}) =>
+			(await projectTeamsCreate({path: {project: projectId}, body: {team_id: teamId, ...(permission === undefined ? {} : {permission})}})).data,
 		onSettled: ({projectId}, client) => invalidateShares(client, projectId, 'teams'),
 		successMessage: () => shareSuccess('teams', 'addedSuccess'),
 	})
