@@ -103,7 +103,9 @@ describe('ShareDialog', () => {
 		const wrapper = await mountDialog(true)
 		// Pick the option itself: happy-dom's select.value setter only matches value attributes, and
 		// Vue binds :value as a property.
-		await wrapper.find('select').findAll('option')[2]!.setSelected()
+		const roleSelect = wrapper.find('select')
+		roleSelect.findAll('option')[2]!.element.selected = true
+		await roleSelect.trigger('change')
 		await wrapper.find('input[type="search"]').setValue('e')
 		const results = wrapper.findAll('.share-dialog__result').map(result => result.text())
 		// already shared directly: Priya and Design are not offered again
