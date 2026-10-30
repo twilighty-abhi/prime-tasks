@@ -25,7 +25,8 @@ for (const kind of ['user', 'team'] as const) {
 
 		const row = dialog.locator('.share-dialog__row').filter({hasText: name})
 		await expect(row).toBeVisible()
-		await expect(row).toContainText('Direct')
+		// A direct share's source reads Direct for people and Team for teams.
+		await expect(row).toContainText(kind === 'user' ? 'Direct' : 'Team')
 		const permission = row.getByRole('combobox', {name: `Permission for ${name}`})
 		// New shares get the role picked next to the search, read & write by default.
 		await expect(permission).toHaveValue('1')
