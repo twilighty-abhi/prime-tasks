@@ -687,6 +687,7 @@ func init() {
 		"TaskReminder":                                 reflect.ValueOf((*models.TaskReminder)(nil)),
 		"TaskReminderFiredEvent":                       reflect.ValueOf((*models.TaskReminderFiredEvent)(nil)),
 		"TaskRepeatMode":                               reflect.ValueOf((*models.TaskRepeatMode)(nil)),
+		"TaskShareAndAssign":                           reflect.ValueOf((*models.TaskShareAndAssign)(nil)),
 		"TaskUnreadStatus":                             reflect.ValueOf((*models.TaskUnreadStatus)(nil)),
 		"TaskUpdatedEvent":                             reflect.ValueOf((*models.TaskUpdatedEvent)(nil)),
 		"TaskWithComments":                             reflect.ValueOf((*models.TaskWithComments)(nil)),
