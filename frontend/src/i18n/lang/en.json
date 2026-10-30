@@ -492,6 +492,21 @@
       "success": "The project was successfully updated."
     },
     "share": {
+      "dialog": {
+        "searchLabel": "Search for people or teams",
+        "searchPlaceholder": "Add people or teams…",
+        "roleLabel": "Role for new people and teams",
+        "team": "Team",
+        "access": "Who has access",
+        "remove": "Remove",
+        "removeName": "Remove {name}",
+        "source": {
+          "owner": "Owner",
+          "direct": "Direct",
+          "team": "Team",
+          "parent": "From \"{project}\""
+        }
+      },
       "header": "Share this project",
       "title": "Share \"{project}\"",
       "share": "Share",
@@ -894,7 +909,6 @@
     "disable": "Disable",
     "copy": "Copy to clipboard",
     "copyError": "Copy to clipboard failed",
-    "searchPlaceholder": "Type to search…",
     "previous": "Previous",
     "next": "Next",
     "poweredBy": "Powered by Vikunja",

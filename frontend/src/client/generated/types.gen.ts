@@ -1282,6 +1282,18 @@ export type PaginatedProject = {
     total_pages?: number;
 };
 
+export type PaginatedProjectAccessEntry = {
+    /**
+     * A URL to the JSON Schema for this object.
+     */
+    readonly $schema?: string;
+    items?: Array<ProjectAccessEntry> | null;
+    page?: number;
+    per_page?: number;
+    total?: number;
+    total_pages?: number;
+};
+
 export type PaginatedProjectView = {
     /**
      * A URL to the JSON Schema for this object.
@@ -1563,6 +1575,48 @@ export type Project = {
      * The views configured for this project. Managed through the project view endpoints.
      */
     readonly views?: Array<ProjectView> | null;
+};
+
+export type ProjectAccessEntry = {
+    /**
+     * Whether this entry is a user or a team.
+     */
+    kind?: 'user' | 'team';
+    /**
+     * 0 = read, 1 = read & write, 2 = admin.
+     */
+    permission?: number;
+    /**
+     * owner: owns this project. direct: shared on this project. parent: owns, or is shared on, a parent project, so it is managed there.
+     */
+    source?: 'owner' | 'direct' | 'parent';
+    /**
+     * For kind team.
+     */
+    team?: ProjectAccessTeam;
+    /**
+     * For kind user. Email addresses are never included.
+     */
+    user?: User;
+    /**
+     * For source parent: the ancestor project the access comes from.
+     */
+    via_project_id?: number;
+    /**
+     * The title of that ancestor project.
+     */
+    via_project_title?: string;
+};
+
+export type ProjectAccessTeam = {
+    /**
+     * The team's id.
+     */
+    id?: number;
+    /**
+     * The team's name.
+     */
+    name?: string;
 };
 
 export type ProjectDuplicate = {
@@ -4178,6 +4232,14 @@ export type PaginatedProjectWritable = {
     total_pages?: number;
 };
 
+export type PaginatedProjectAccessEntryWritable = {
+    items?: Array<ProjectAccessEntryWritable> | null;
+    page?: number;
+    per_page?: number;
+    total?: number;
+    total_pages?: number;
+};
+
 export type PaginatedProjectViewWritable = {
     items?: Array<ProjectViewWritable> | null;
     page?: number;
@@ -4335,6 +4397,37 @@ export type ProjectWritable = {
      * The title of the project. You'll see this in the overview.
      */
     title?: string;
+};
+
+export type ProjectAccessEntryWritable = {
+    /**
+     * Whether this entry is a user or a team.
+     */
+    kind?: 'user' | 'team';
+    /**
+     * 0 = read, 1 = read & write, 2 = admin.
+     */
+    permission?: number;
+    /**
+     * owner: owns this project. direct: shared on this project. parent: owns, or is shared on, a parent project, so it is managed there.
+     */
+    source?: 'owner' | 'direct' | 'parent';
+    /**
+     * For kind team.
+     */
+    team?: ProjectAccessTeam;
+    /**
+     * For kind user. Email addresses are never included.
+     */
+    user?: UserWritable;
+    /**
+     * For source parent: the ancestor project the access comes from.
+     */
+    via_project_id?: number;
+    /**
+     * The title of that ancestor project.
+     */
+    via_project_title?: string;
 };
 
 export type ProjectDuplicateWritable = {
@@ -7362,6 +7455,33 @@ export type ProjectsDuplicateResponses = {
 };
 
 export type ProjectsDuplicateResponse = ProjectsDuplicateResponses[keyof ProjectsDuplicateResponses];
+
+export type ProjectAccessListData = {
+    body?: never;
+    path: {
+        project: number;
+    };
+    query?: never;
+    url: '/projects/{project}/access';
+};
+
+export type ProjectAccessListErrors = {
+    /**
+     * Error
+     */
+    default: VikunjaErrorModel;
+};
+
+export type ProjectAccessListError = ProjectAccessListErrors[keyof ProjectAccessListErrors];
+
+export type ProjectAccessListResponses = {
+    /**
+     * OK
+     */
+    200: PaginatedProjectAccessEntry;
+};
+
+export type ProjectAccessListResponse = ProjectAccessListResponses[keyof ProjectAccessListResponses];
 
 export type ProjectsBackgroundDeleteData = {
     body?: never;
