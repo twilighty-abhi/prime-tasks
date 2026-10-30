@@ -60,7 +60,8 @@ for (const kind of ['user', 'team'] as const) {
 		await expect(dialog.getByRole('listbox').getByRole('option').filter({hasText: name})).toBeVisible()
 		await search.press('ControlOrMeta+a')
 		await search.press('Backspace')
-		await expect(dialog.getByRole('option')).toHaveCount(0)
+		// Scoped to the results: the role picker's <option>s are options too.
+		await expect(dialog.getByRole('listbox')).toHaveCount(0)
 	})
 }
 
