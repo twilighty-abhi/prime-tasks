@@ -1,6 +1,12 @@
 <template>
-	<div class="edit-assignees-wrapper">
+	<!-- The task view focuses this root to open the picker, so pass focus on to the Multiselect. -->
+	<div
+		class="edit-assignees-wrapper"
+		tabindex="-1"
+		@focus="focusPicker"
+	>
 		<Multiselect
+			ref="picker"
 			v-model="assignees"
 			class="edit-assignees"
 			:class="{'has-assignees': assignees.length > 0}"
@@ -54,7 +60,7 @@
 </template>
 
 <script setup lang="ts">
-import {ref, computed, watch, nextTick} from 'vue'
+import {ref, computed, watch, nextTick, useTemplateRef, type ComponentPublicInstance} from 'vue'
 import {useI18n} from 'vue-i18n'
 
 import User from '@/components/misc/User.vue'
@@ -116,6 +122,15 @@ const pendingShare = ref<UserWithId | null>(null)
 const adminNeededFor = ref<UserWithId | null>(null)
 const assignees = ref<UserWithId[]>([])
 let isAdding = false
+
+const picker = useTemplateRef<ComponentPublicInstance>('picker')
+
+function focusPicker() {
+	const root = picker.value?.$el
+	if (root instanceof HTMLElement) {
+		root.focus()
+	}
+}
 
 function preloadUsers() {
 	searchEnabled.value = true
