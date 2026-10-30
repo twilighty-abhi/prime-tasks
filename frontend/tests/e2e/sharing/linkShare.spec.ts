@@ -32,6 +32,8 @@ test.describe('Link shares', () => {
 	test('creates named password shares, preserves view selections and deletes a share', async ({authenticatedPage: page, browser, baseURL}) => {
 		const [project] = await createProjects(1)
 		await page.goto(`/projects/${project.id}/settings/share`)
+		// prime-tasks F5: link sharing sits in a collapsed section under the share dialog.
+		await page.locator('details.link-sharing > summary').click()
 		const panel = page.locator('.sharables-project')
 		await panel.getByRole('button', {name: 'Create a link share'}).click()
 		await panel.locator('#linkShareName').fill('Client link')
@@ -73,6 +75,7 @@ test.describe('Link shares', () => {
 		}
 
 		await page.reload()
+		await page.locator('details.link-sharing > summary').click()
 		await expect(row).toBeVisible()
 		await row.getByRole('button', {name: 'Remove a link share'}).click()
 		await page.locator('dialog[open]').getByRole('button', {name: 'Do it!'}).click()
