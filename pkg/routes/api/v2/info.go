@@ -20,13 +20,22 @@ import (
 	"context"
 	"net/http"
 
+	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/routes/api/shared"
 
 	"github.com/danielgtaylor/huma/v2"
 )
 
+// VikunjaInfos is the shared instance info plus what only /api/v2 reports. It keeps the shared
+// struct's name so the generated client type stays VikunjaInfos.
+type VikunjaInfos struct {
+	shared.VikunjaInfos
+	// prime-tasks F2: lets the frontend search the whole directory when picking assignees.
+	OrgDirectory bool `json:"org_directory" doc:"Whether service.orgdirectory is on: user search covers everyone in the instance, not just people you share with."`
+}
+
 type infoBody struct {
-	Body shared.VikunjaInfos
+	Body VikunjaInfos
 }
 
 // RegisterInfoRoutes wires the public instance-info endpoint onto the Huma API.
@@ -47,5 +56,9 @@ func RegisterInfoRoutes(api huma.API) {
 func init() { AddRouteRegistrar(RegisterInfoRoutes) }
 
 func info(_ context.Context, _ *struct{}) (*infoBody, error) {
-	return &infoBody{Body: shared.BuildInfo()}, nil //nolint:contextcheck // OIDC provider init deliberately uses a background context — provider lifetime exceeds the request
+	base := shared.BuildInfo() //nolint:contextcheck // OIDC provider init deliberately uses a background context — provider lifetime exceeds the request
+	return &infoBody{Body: VikunjaInfos{
+		VikunjaInfos: base,
+		OrgDirectory: config.ServiceOrgDirectory.GetBool(),
+	}}, nil
 }

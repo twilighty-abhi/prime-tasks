@@ -1277,6 +1277,14 @@
     "assignee": {
       "placeholder": "Type to assign a user…",
       "selectPlaceholder": "Assign this user",
+      "notInProject": "Not in this project",
+      "shareAndAssign": {
+        "header": "Share and assign",
+        "text": "Give {name} read & write on this project and assign?",
+        "confirm": "Share and assign",
+        "success": "{name} can now see this project and is assigned.",
+        "adminNeeded": "{name} can't see this project yet. A project admin needs to share it with them first."
+      },
       "assignSuccess": "The user has been assigned successfully.",
       "unassignSuccess": "The user has been unassigned successfully."
     },

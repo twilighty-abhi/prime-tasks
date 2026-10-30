@@ -2650,6 +2650,21 @@ export type TaskReminder = {
     reminder?: string;
 };
 
+export type TaskShareAndAssign = {
+    /**
+     * A URL to the JSON Schema for this object.
+     */
+    readonly $schema?: string;
+    /**
+     * True when this call shared the project with the user; false when they already had access.
+     */
+    readonly shared?: boolean;
+    /**
+     * The user to assign.
+     */
+    user_id?: number;
+};
+
 export type Team = {
     /**
      * A URL to the JSON Schema for this object.
@@ -3513,6 +3528,10 @@ export type VikunjaInfos = {
      * The message of the day, shown to all users.
      */
     motd?: string;
+    /**
+     * Whether service.orgdirectory is on: user search covers everyone in the instance, not just people you share with.
+     */
+    org_directory?: boolean;
     /**
      * Whether public teams are enabled.
      */
@@ -4677,6 +4696,13 @@ export type TaskRelationWritable = {
     relation_kind?: 'subtask' | 'parenttask' | 'related' | 'duplicateof' | 'duplicates' | 'blocking' | 'blocked' | 'precedes' | 'follows' | 'copiedfrom' | 'copiedto';
 };
 
+export type TaskShareAndAssignWritable = {
+    /**
+     * The user to assign.
+     */
+    user_id?: number;
+};
+
 export type TeamWritable = {
     description?: string;
     /**
@@ -5115,6 +5141,10 @@ export type VikunjaInfosWritable = {
      * The message of the day, shown to all users.
      */
     motd?: string;
+    /**
+     * Whether service.orgdirectory is on: user search covers everyone in the instance, not just people you share with.
+     */
+    org_directory?: boolean;
     /**
      * Whether public teams are enabled.
      */
@@ -9250,6 +9280,33 @@ export type TaskAssigneesBulkResponses = {
 };
 
 export type TaskAssigneesBulkResponse = TaskAssigneesBulkResponses[keyof TaskAssigneesBulkResponses];
+
+export type TaskAssigneesShareAndAssignData = {
+    body: TaskShareAndAssignWritable;
+    path: {
+        task: number;
+    };
+    query?: never;
+    url: '/tasks/{task}/assignees/share';
+};
+
+export type TaskAssigneesShareAndAssignErrors = {
+    /**
+     * Error
+     */
+    default: VikunjaErrorModel;
+};
+
+export type TaskAssigneesShareAndAssignError = TaskAssigneesShareAndAssignErrors[keyof TaskAssigneesShareAndAssignErrors];
+
+export type TaskAssigneesShareAndAssignResponses = {
+    /**
+     * Created
+     */
+    201: TaskShareAndAssign;
+};
+
+export type TaskAssigneesShareAndAssignResponse = TaskAssigneesShareAndAssignResponses[keyof TaskAssigneesShareAndAssignResponses];
 
 export type TaskAssigneesDeleteData = {
     body?: never;
