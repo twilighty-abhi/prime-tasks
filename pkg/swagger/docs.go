@@ -9866,12 +9866,24 @@ const docTemplate = `{
                         }
                     ]
                 },
+                "owner_display_name": {
+                    "description": "prime-tasks F3: the owner's name, or their username when they have no name. Only /api/v2 sets it.",
+                    "type": "string"
+                },
                 "parent_project_id": {
                     "type": "integer"
                 },
                 "position": {
                     "description": "The position this project has when querying all projects. See the tasks.position property on how to use this.",
                     "type": "number"
+                },
+                "shared_via": {
+                    "description": "prime-tasks F3: how this project reaches the caller when someone else owns it. Only /api/v2 sets it.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/models.ProjectSharedVia"
+                        }
+                    ]
                 },
                 "subscription": {
                     "description": "The subscription status for the user reading this project. You can only read this property, use the subscription endpoints to modify it.\nWill only returned when retreiving one project.",
@@ -9917,6 +9929,29 @@ const docTemplate = `{
                 "parent_project_id": {
                     "description": "The target parent project",
                     "type": "integer"
+                }
+            }
+        },
+        "models.ProjectSharedVia": {
+            "type": "object",
+            "properties": {
+                "parent_project_id": {
+                    "type": "integer"
+                },
+                "parent_project_title": {
+                    "type": "string"
+                },
+                "permission": {
+                    "$ref": "#/definitions/models.Permission"
+                },
+                "team_id": {
+                    "type": "integer"
+                },
+                "team_name": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
                 }
             }
         },
