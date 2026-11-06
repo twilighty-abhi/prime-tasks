@@ -132,8 +132,8 @@ GOTOOLCHAIN=local go build -o run/vikunja . && (cd run && ./vikunja web)   # htt
 
 For Postgres, use Homebrew's `postgresql@16` in a throwaway cluster (`initdb` into `run/`, any free port) and
 point the tests at it with `VIKUNJA_TESTS_USE_CONFIG=1 VIKUNJA_DATABASE_TYPE=postgres VIKUNJA_DATABASE_HOST=…`.
-`golangci-lint` and Playwright's own Chromium aren't installed on the Mac, so CI is the gate for `mage lint` and
-`mage test:e2e`.
+`golangci-lint`, Playwright's Chromium and `swag` are in `.local-tools/` too; `scripts/local-ci.sh` runs the whole
+CI equivalent (see [Local CI](#local-ci-while-github-actions-is-unavailable)).
 
 ## MCP tokens
 
@@ -223,7 +223,7 @@ didn't compile on Windows (fix B1).
 | `mage test:web`, `test:caldav`, `test:e2EApi` | ok |
 | frontend unit (`vitest run --dir ./src`) | 205 files, 2554 tests passed |
 | F9 matrix (`mage -v test:filter TestProjectPermissionMatrix`), SQLite and Postgres 16.15 | 84 matrix checks + 5 shared-via checks = 89, all passed; F2 (#7) adds a 12-check column |
-| frontend e2e (Playwright) | not run on the Mac (Playwright's Chromium isn't installed); CI runs it |
+| frontend e2e (Playwright) | 437 tests through `scripts/local-ci.sh` (added after this baseline): all pass except the known macOS-host failure `menu.spec.ts:19` |
 
 `test:feature` failures that only happen on Windows (upstream Linux CI is green on v2.7.1):
 
