@@ -52,7 +52,7 @@
 					</RouterLink>
 					<span
 						v-if="p.id !== project?.id"
-						class="has-text-grey-light"
+						class="task-breadcrumb-separator"
 					> &gt; </span>
 				</template>
 				<BucketSelect
