@@ -123,6 +123,12 @@ Needs: a clean working tree, Homebrew `postgresql@16` (the script makes a throwa
 it), and Docker Desktop running for the e2e step. It doesn't run the CI-only MySQL/MariaDB/ParadeDB suites,
 `test-migration-smoke`, `test-s3-integration`, `veans-test` or `test-veans-e2e`.
 
+Known macOS-host e2e failure: `tests/e2e/misc/menu.spec.ts:19` ("Can be toggled with keyboard shortcut on desktop")
+presses `ControlOrMeta+e`, which on a Mac host sends Cmd. Playwright's "Desktop Chrome" device reports a Windows user
+agent, and the app picks Ctrl or Cmd from the user agent (`helpers/isAppleDevice.ts`), so it waits for Ctrl. On CI's
+Linux runner the same key is Ctrl and the test passes. The script still runs it and names it in the summary, but
+doesn't fail the e2e step for it; any other failure does.
+
 Differences from CI: Dex's issuer is `http://127.0.0.1:5556` instead of `http://dex:5556` (same config otherwise;
 the Mac can't resolve `dex`), and the Dex image runs under amd64 emulation. Playwright runs serially
 (`workers: 1`, as in upstream's config) instead of in 6 shards, so the e2e step takes the longest.

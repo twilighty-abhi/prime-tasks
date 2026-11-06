@@ -24,6 +24,8 @@ PG_SOCK=$ROOT/run/lcpg
 DEX_IMAGE=ghcr.io/go-vikunja/dex-testing:main@sha256:d401c06a9f8fd36ece446a07499b827232af7f21eb36872a76c9eac4d0c77bab
 MAILPIT_IMAGE=axllent/mailpit:v1.31.6@sha256:23fe39e81bde596a918000b3135c0f85dc8bb4c9ea6be274b051143f3e300387
 TEST_SECRET=averyLongSecretToSe33dtheDB
+# e2e tests that fail only because the host is a Mac (see e2e_run); reported, but don't fail the step.
+KNOWN_MAC_E2E_FAILURES=("tests/e2e/misc/menu.spec.ts:19:2")
 # Mailpit on its own ports: other local projects often hold 1025/8025.
 MAILPIT_SMTP=${LOCAL_CI_MAILPIT_SMTP:-11025}
 MAILPIT_HTTP=${LOCAL_CI_MAILPIT_HTTP:-18025}
@@ -83,7 +85,11 @@ f9_counts() {
 }
 vitest_counts() { grep -E '^ +Tests ' "$1" | tail -1 | sed -E 's/^ +Tests +//'; }
 eslint_counts() { grep -E '✖|problems' "$1" | tail -1 || echo "no problems"; }
-pw_counts() { grep -E '^ +[0-9]+ (passed|failed|flaky|skipped|did not run)' "$1" | sed -E 's/^ +//; s/ \(.*//' | paste -sd ',' - ; }
+pw_counts() {
+	local c; c=$(grep -E '^ +[0-9]+ (passed|failed|flaky|skipped|did not run)' "$1" | sed -E 's/^ +//; s/ \(.*//' | paste -sd ',' -)
+	[ -f "$OUT/e2e-known-mac-failures.txt" ] && c="$c; known macOS-host failure: $(paste -sd ' ' "$OUT/e2e-known-mac-failures.txt") (Cmd vs Ctrl, see PRIME.md)"
+	echo "$c"
+}
 lint_counts() { local n; n=$(grep -cE '^[^ ].*\.go:[0-9]+:[0-9]+: ' "$1"); echo "$n issues"; }
 
 # --- Postgres 16, throwaway cluster ---------------------------------------------------------
@@ -141,6 +147,18 @@ e2e_run() {
 		go tool mage test:e2e ""
 	local rc=$?
 	e2e_services_stop
+	# Playwright's "Desktop Chrome" device reports a Windows user agent, so the app (isAppleDevice reads the
+	# UA) expects Ctrl; on a Mac host ControlOrMeta sends Cmd. CI runs on Linux, where it sends Ctrl.
+	# Only these exact tests may fail; any other failure fails the step.
+	if [ $rc -ne 0 ]; then
+		local failed unexpected
+		failed=$(awk '/^ +[0-9]+ failed$/{f=1;next} f&&/^ +[0-9]+ (flaky|passed|skipped|did not run|interrupted)/{exit} f{print}' "$OUT/e2e-playwright.log" | sed -E 's/^ +\[chromium\] › //; s/ › .*//')
+		unexpected=$(echo "$failed" | grep -v -x -F -f <(printf '%s\n' "${KNOWN_MAC_E2E_FAILURES[@]}") | grep -v '^$')
+		if [ -n "$failed" ] && [ -z "$unexpected" ]; then
+			echo "$failed" > "$OUT/e2e-known-mac-failures.txt"
+			return 0
+		fi
+	fi
 	return $rc
 }
 
