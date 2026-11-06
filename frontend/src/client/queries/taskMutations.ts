@@ -7,6 +7,7 @@ import {
 	tasksDuplicate,
 	tasksMarkRead,
 	taskAssigneesCreate,
+	taskAssigneesShareAndAssign,
 	taskAssigneesDelete,
 	taskLabelsCreate,
 	taskLabelsDelete,
@@ -36,6 +37,7 @@ import {
 	taskQueryKeys,
 } from './taskCache'
 import {getCachedProject, projectKeys} from './projects'
+import {userSearchKeys} from './userSearch'
 import {colorFromHex} from '@/helpers/color/colorFromHex'
 import {getDefaultBucketId, moveTaskToBucket} from '@/helpers/task'
 import {translatedError} from '@/message'
@@ -294,6 +296,23 @@ export function addTaskAssigneeMutationOptions() {
 		onSettled: ({taskId}, client) => invalidateTaskMembership(client, taskId),
 	})
 }
+// prime-tasks F2: shares the project read & write when the assignee can't see it yet, and assigns,
+// in one call. The server allows this only for project admins.
+export function shareAndAssignTaskMutationOptions() {
+	return contextMutationOptions({
+		mutationFn: async ({taskId, user}: AssigneeInput) =>
+			(await taskAssigneesShareAndAssign({path: {task: taskId}, body: {user_id: user.id}})).data,
+		onSuccess: (_data, {taskId, user}, client) => mapTaskEverywhere(client, taskId, task => ({
+			...task,
+			assignees: [...task.assignees.filter(item => item.id !== user.id), user],
+		})),
+		onSettled: ({taskId}, client) => Promise.all([
+			invalidateTaskMembership(client, taskId),
+			client.invalidateQueries({queryKey: ['project-shares']}),
+			client.invalidateQueries({queryKey: userSearchKeys.all, refetchType: 'none'}),
+		]),
+	})
+}
 export function removeTaskAssigneeMutationOptions() {
 	return contextMutationOptions({
 		mutationFn: async ({taskId, user}: AssigneeInput) => {
@@ -477,6 +496,10 @@ export function useMarkTaskReadMutation() {
 
 export function useAddTaskAssigneeMutation() {
 	return useMutation(addTaskAssigneeMutationOptions())
+}
+
+export function useShareAndAssignTaskMutation() {
+	return useMutation(shareAndAssignTaskMutationOptions())
 }
 
 export function useRemoveTaskAssigneeMutation() {

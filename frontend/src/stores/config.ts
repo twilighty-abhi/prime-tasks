@@ -53,6 +53,7 @@ function defaultConfig(): ConfigState {
 		frontend_url: '',
 		motd: '',
 		link_sharing_enabled: true,
+		org_directory: false,
 		max_file_size: '20MB',
 		max_items_per_page: 50,
 		available_migrators: [],
