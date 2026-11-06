@@ -368,6 +368,12 @@ function focusSearch() {
 	@media screen and (max-width: $tablet) {
 		flex-direction: column;
 		align-items: stretch;
+
+		// The wrapper stretches; the select has to follow, or Bulma's arrow sits outside it.
+		.select,
+		.select select {
+			inline-size: 100%;
+		}
 	}
 }
 
@@ -482,5 +488,19 @@ function focusSearch() {
 	align-items: center;
 	gap: var(--yy-space-2);
 	inline-size: 100%;
+}
+</style>
+
+<style lang="scss">
+// On phones the modal card fills the screen and spreads header, content and footer apart
+// (Modal.vue). For the share dialog, keep the content under the header and the footer at the bottom.
+@media screen and (max-width: $tablet) {
+	.card:has(.share-dialog) {
+		justify-content: flex-start !important;
+
+		> .card-footer {
+			margin-block-start: auto;
+		}
+	}
 }
 </style>
