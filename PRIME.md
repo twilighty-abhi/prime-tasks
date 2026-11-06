@@ -28,6 +28,7 @@ Rules for the fork:
 | B1 | Magefile compiles on Windows (process-group helpers split by OS) | [#1](https://github.com/twilighty-abhi/prime-tasks/pull/1) | none (build tooling) | not sent yet; good upstream candidate |
 | D1 | Office VM deploy: `deploy/` compose stack (app, Postgres 16, Caddy, one-shot file permissions), `config.yml`, `.env.example`, `backup.sh`, `sql/flip-discoverable.sql`, README with a license-free account, team, sharing and password-reset setup; `ACME_EMAIL` is required | [#1](https://github.com/twilighty-abhi/prime-tasks/pull/1), license-free setup in [#10](https://github.com/twilighty-abhi/prime-tasks/pull/10) | none (deploy files only) | fork-only |
 | B2 | Test fixtures load on Windows (`path.Join` for `embed.FS` paths) | [#1](https://github.com/twilighty-abhi/prime-tasks/pull/1) | none (test tooling) | not sent yet; good upstream candidate |
+| W1 | Fork CI and release: `prime-ci.yml` runs upstream's `test.yml` on PRs into and pushes to `prime`; `prime-release.yml` pushes `ghcr.io/twilighty-abhi/prime-tasks` on `prime-v*` tags; upstream-only workflows disabled (see below) | [#1](https://github.com/twilighty-abhi/prime-tasks/pull/1), workflow list in HOUSEKEEPING-PR | none (CI only) | fork-only |
 | Y1 | Yuyu theme layer: tokens, Vikunja variables mapped onto them, self-hosted fonts, component rules, `PRODUCT_NAME` branding | [#5](https://github.com/twilighty-abhi/prime-tasks/pull/5) | none (branding) | fork-only |
 | F9 | Permission test matrix for project access (`pkg/models/project_permission_matrix_test.go`) | [#1](https://github.com/twilighty-abhi/prime-tasks/pull/1) | none (tests only) | fork-only |
 | F4 | Leave project: `DELETE /api/v2/projects/{project}/shares/me`, self-removal in `ProjectUser.CanDelete`, "Leave project" in the project menu for everyone but the owner; without a direct share, the dialog names the team (with a link) or parent project the access comes from | [#3](https://github.com/twilighty-abhi/prime-tasks/pull/3), team-only dialog in [#11](https://github.com/twilighty-abhi/prime-tasks/pull/11) | none (new endpoint and menu item; removing anyone else stays admin-only) | fork-only for now |
@@ -55,18 +56,30 @@ The `prime-v*` tag triggers `.github/workflows/prime-release.yml`, which pushes
 `ghcr.io/twilighty-abhi/prime-tasks:X.Y.Z` and `:latest`.
 
 Upstream workflow files stay in the tree unchanged, so merges don't conflict. The upstream-only ones are disabled
-in the repo settings instead (Actions, then the workflow, then "Disable workflow"), or with:
+in the repo settings instead (Actions, then the workflow, then "Disable workflow"), or with
+`gh workflow disable <file> -R twilighty-abhi/prime-tasks`.
 
-```bash
-for w in ci.yml crowdin.yml nixpkgs-update.yml auto-label.yml agentscan.yml automerge-label.yml \
-         preview.yml stale-waiting-for-reply.yml issue-closed-comment.yml; do
-  gh workflow disable "$w" -R twilighty-abhi/prime-tasks
-done
-```
+GitHub only lists a workflow (and only lets you disable it) after something has triggered it once. A workflow marked
+"never registered" below has never run on the fork: disable it the first time it shows up under Actions.
 
-`ci.yml` is disabled because its release job publishes to Docker Hub with upstream's secrets.
-`prime-ci.yml` runs upstream's `test.yml` on PRs into and pushes to `prime`. If upstream adds a new workflow,
-check whether it needs disabling after the merge.
+| Workflow | Trigger | State on the fork (2026-11-06) | Why |
+|---|---|---|---|
+| `prime-ci.yml` | PRs into and pushes to `prime` | **active** | ours: runs `test.yml` |
+| `prime-release.yml` | push of a `prime-v*` tag | never registered (no tag yet) | ours: GHCR image |
+| `test.yml` | `workflow_call` | reusable, called by `prime-ci.yml` | upstream test suite |
+| `release.yml` | `workflow_call` | reusable, only called by `ci.yml` (disabled) | upstream release jobs |
+| `ci.yml` | pushes and PRs on upstream branches | disabled | its release job publishes to Docker Hub with upstream's secrets |
+| `agentscan.yml` | PRs | disabled | upstream bot |
+| `auto-label.yml` | issues and PRs | disabled | upstream bot |
+| `automerge-label.yml` | PRs | disabled | upstream bot |
+| `preview.yml` | PRs | disabled | upstream preview deploys |
+| `stale-waiting-for-reply.yml` | schedule, issue comments | disabled | upstream issue triage |
+| `dependency-diff.yml` | PRs that change `pnpm-lock.yaml` | never registered; disable on first run | upstream dependency report (read-only, comments on the PR) |
+| `crowdin.yml` | schedule | never registered | upstream translations |
+| `nixpkgs-update.yml` | published GitHub release, manual | never registered | upstream Nix packaging; we only push tags |
+| `issue-closed-comment.yml` | issue closed | never registered | upstream issue bot |
+
+If an upstream merge adds a workflow, add it to this table and decide whether it needs disabling.
 
 ## Building and running on abhi-t4gc (dev laptop, Windows 11)
 
@@ -102,7 +115,40 @@ C:\dev\prime-tasks\scripts\stop-all.ps1
 ```
 
 From the tailnet: frontend <http://abhi-t4gc:4173/> (proxies `/api` to the API), API <http://abhi-t4gc:3456/>,
-MCP `POST http://abhi-t4gc:4173/api/v2/mcp` with an API token that has the `mcp` permission.
+MCP `POST http://abhi-t4gc:4173/api/v2/mcp` with an API token (see [MCP tokens](#mcp-tokens)).
+
+## Building and running on the Mac
+
+Since 2026-11-06 development happens on the Mac in `~/Documents/Projects/prime-tasks`. Nothing is installed
+system-wide: Node 24.21.0 and pnpm 11.27.0 live in `.local-tools/` (`source .local-tools/env.sh`), Go is Homebrew's
+(`GOTOOLCHAIN=local`), and `run/` holds the dev binary, its `config.yml` (SQLite) and the demo seed
+(`run/seed-users.sh`, then `python3 -I run/seed_demo.py`). `.local-tools/` and `run/` are in `.git/info/exclude`.
+
+```bash
+source .local-tools/env.sh
+(cd frontend && pnpm install && pnpm build)
+GOTOOLCHAIN=local go build -o run/vikunja . && (cd run && ./vikunja web)   # http://localhost:3456/
+```
+
+For Postgres, use Homebrew's `postgresql@16` in a throwaway cluster (`initdb` into `run/`, any free port) and
+point the tests at it with `VIKUNJA_TESTS_USE_CONFIG=1 VIKUNJA_DATABASE_TYPE=postgres VIKUNJA_DATABASE_HOST=…`.
+`golangci-lint` and Playwright's own Chromium aren't installed on the Mac, so CI is the gate for `mage lint` and
+`mage test:e2e`.
+
+## MCP tokens
+
+Upstream's MCP endpoint is `POST /api/v2/mcp`. The token needs the `mcp` → `access` permission **and** the route
+permissions of every tool it should see: the server lists only tools whose routes the token may call. A token with
+only `mcp:access` gets a valid `tools/list` with **0 tools**; one with every permission sees 27 typed tools plus
+`find_action` / `do_action` (89 operations in all, `pkg/modules/mcp/exposure.go`). The fork's own endpoints (leave
+project, access list, share and assign) are not exposed over MCP yet.
+
+## Login rate limit
+
+Upstream limits logins per client IP (`/api/v1/login`, `/api/v2/login`): after about ten in a minute it answers
+`429 Too Many Requests` for a while. Scripts and browser tests that log in as several users should log in once per
+user and reuse the token (put it in `localStorage.token` for the frontend) instead of submitting the login form
+every time.
 
 ## Local CI (while GitHub Actions is unavailable)
 
@@ -166,8 +212,18 @@ didn't compile on Windows (fix B1).
 | `mage test:caldav` | ok |
 | `mage test:e2EApi` | ok |
 | frontend unit (`vitest run --dir ./src`) | 202 files, 2536 tests passed |
-| F9 matrix, SQLite and Postgres 16.15 | 91 subtests passed |
+| F9 matrix, SQLite and Postgres 16.15 | 91 subtests passed (F9 alone, before F3) |
 | frontend e2e (Playwright) | not run on the laptop; CI runs it |
+
+**macOS baseline** (the Mac, arm64, Go 1.27.1, `prime` at `853898a59`, 2026-11-06). Logs are in `run/logs-prime/`.
+
+| Suite | Result |
+|---|---|
+| `mage test:feature` | 54 packages ok, 0 fail (the 6 Windows-only failures pass here) |
+| `mage test:web`, `test:caldav`, `test:e2EApi` | ok |
+| frontend unit (`vitest run --dir ./src`) | 205 files, 2554 tests passed |
+| F9 matrix (`mage -v test:filter TestProjectPermissionMatrix`), SQLite and Postgres 16.15 | 84 matrix checks + 5 shared-via checks = 89, all passed; F2 (#7) adds a 12-check column |
+| frontend e2e (Playwright) | not run on the Mac (Playwright's Chromium isn't installed); CI runs it |
 
 `test:feature` failures that only happen on Windows (upstream Linux CI is green on v2.7.1):
 
