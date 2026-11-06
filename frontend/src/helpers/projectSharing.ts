@@ -43,3 +43,23 @@ export function sharedViaDescription(project: Pick<ProjectResponse, 'shared_via'
 			return t('project.sharedVia.direct', {owner})
 	}
 }
+
+// prime-tasks F4: why a member can't leave a project themselves. Only a direct share on the project
+// can be left; otherwise the access comes from a team or from a parent project that is shared with them.
+export type LeaveBlocker =
+	| {kind: 'team', teamId: number, teamName: string}
+	| {kind: 'parent', projectId: number, projectTitle: string}
+
+export function leaveBlocker(project: Pick<ProjectResponse, 'shared_via'>, hasDirectShare: boolean): LeaveBlocker | null {
+	const via = project.shared_via
+	if (hasDirectShare || !via) {
+		return null
+	}
+	if ((via.type === 'team' || via.type === 'parent') && via.team_id) {
+		return {kind: 'team', teamId: via.team_id, teamName: via.team_name ?? ''}
+	}
+	if (via.type === 'parent' && via.parent_project_id) {
+		return {kind: 'parent', projectId: via.parent_project_id, projectTitle: via.parent_project_title ?? ''}
+	}
+	return null
+}

@@ -33,10 +33,10 @@ describe('LeaveProjectDropdownItem', () => {
 		expect(wrapper.find('.leave').exists()).toBe(true)
 	})
 
-	it('hides when the access is not a direct share', async () => {
-		sdk.projectUsersList.mockResolvedValue({data: {items: [{username: 'someone'}], total_pages: 1}})
+	it('shows for a member whose access comes from a team, without asking the server', async () => {
 		const wrapper = await mountItem({projectId: 7, ownerId: 1})
-		expect(wrapper.find('.leave').exists()).toBe(false)
+		expect(wrapper.find('.leave').exists()).toBe(true)
+		expect(sdk.projectUsersList).not.toHaveBeenCalled()
 	})
 
 	it('hides for the owner without asking the server', async () => {
