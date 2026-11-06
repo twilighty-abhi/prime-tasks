@@ -129,6 +129,9 @@ agent, and the app picks Ctrl or Cmd from the user agent (`helpers/isAppleDevice
 Linux runner the same key is Ctrl and the test passes. The script still runs it and names it in the summary, but
 doesn't fail the e2e step for it; any other failure does.
 
+The script runs everything with `TZ=UTC`, as CI does: the e2e time-entry factory writes local time as a naive
+datetime that the API reads as UTC, so in IST the time-tracking tests fail after 18:30.
+
 Differences from CI: Dex's issuer is `http://127.0.0.1:5556` instead of `http://dex:5556` (same config otherwise;
 the Mac can't resolve `dex`), and the Dex image runs under amd64 emulation. Playwright runs serially
 (`workers: 1`, as in upstream's config) instead of in 6 shards, so the e2e step takes the longest.

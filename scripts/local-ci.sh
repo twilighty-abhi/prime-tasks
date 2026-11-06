@@ -42,6 +42,9 @@ else
 	source "$ROOT/.local-tools/env.sh"
 fi
 export GOTOOLCHAIN=local
+# CI runs in UTC. Some e2e factories write local time as a naive datetime that the API reads as UTC,
+# so on a UTC+5:30 Mac those time entries land in "tomorrow" after 18:30 and the day views miss them.
+export TZ=UTC
 # Never reuse cached test results: every run tests this commit for real.
 export GOFLAGS=-count=1
 export PLAYWRIGHT_BROWSERS_PATH="$ROOT/.local-tools/ms-playwright"
