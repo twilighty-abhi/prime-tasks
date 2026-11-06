@@ -18,6 +18,7 @@ package cmd
 
 import (
 	"bufio"
+	"context"
 	"fmt"
 	"os"
 	"strconv"
@@ -281,26 +282,43 @@ var userCreateCmd = &cobra.Command{
 			log.Fatalf("Provided email is invalid.")
 		}
 
-		newUser, err := user.CreateUser(s, u)
-		if err != nil {
-			_ = s.Rollback()
-			log.Fatalf("Error creating new user: %s", err)
+		if _, err := createUserFromCLI(cmd.Context(), s, u); err != nil {
+			log.Fatalf("%s", err)
 		}
-
-		err = models.CreateNewProjectForUser(s, newUser)
-		if err != nil {
-			_ = s.Rollback()
-			log.Fatalf("Error creating new project for user: %s", err)
-		}
-
-		if err := s.Commit(); err != nil {
-			log.Fatalf("Error saving everything: %s", err)
-		}
-
-		events.DispatchPending(cmd.Context(), s)
 
 		fmt.Printf("\nUser was created successfully.\n")
 	},
+}
+
+// createUserFromCLI creates the user and their default project, adds them to their auto-join
+// teams (F6) in the same transaction, commits it and dispatches the queued events. Split out of userCreateCmd so it can be tested.
+func createUserFromCLI(ctx context.Context, s *xorm.Session, u *user.User) (*user.User, error) {
+	newUser, err := user.CreateUser(s, u)
+	if err != nil {
+		_ = s.Rollback()
+		return nil, fmt.Errorf("error creating new user: %w", err)
+	}
+
+	err = models.CreateNewProjectForUser(s, newUser)
+	if err != nil {
+		_ = s.Rollback()
+		return nil, fmt.Errorf("error creating new project for user: %w", err)
+	}
+
+	// prime-tasks F6: the CLI exits before the async user.created listener runs, so apply the
+	// auto-join rules here. If the listener does get to the event, it finds nothing left to do.
+	if err := models.AutoJoinTeams(s, newUser.ID); err != nil {
+		_ = s.Rollback()
+		return nil, fmt.Errorf("error adding the new user to their teams: %w", err)
+	}
+
+	if err := s.Commit(); err != nil {
+		return nil, fmt.Errorf("error saving everything: %w", err)
+	}
+
+	events.DispatchPending(ctx, s)
+
+	return newUser, nil
 }
 
 var userUpdateCmd = &cobra.Command{
