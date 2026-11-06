@@ -103,6 +103,41 @@ C:\dev\prime-tasks\scripts\stop-all.ps1
 From the tailnet: frontend <http://abhi-t4gc:4173/> (proxies `/api` to the API), API <http://abhi-t4gc:3456/>,
 MCP `POST http://abhi-t4gc:4173/api/v2/mcp` with an API token that has the `mcp` permission.
 
+## Local CI (while GitHub Actions is unavailable)
+
+`scripts/local-ci.sh` runs the local equivalent of `prime-ci` on the Mac and exits non-zero if any step fails.
+A PR may merge only after a full run passes on its head commit, with the summary
+(`run/local-ci/<sha>/summary.md`) posted as a PR comment.
+
+| Step | What |
+|---|---|
+| build | `pnpm install --frozen-lockfile`, `pnpm build`, `mage build` |
+| generators | `mage check:translations`, `check:frontend-client`, `check:yaegi-symbols`, `check:got-swag` (swagger) |
+| Go lint | `golangci-lint run` in the repo and in `veans/` |
+| Go suites | `mage test:feature`, `test:web`, `test:caldav`, `test:e2e-api`, each on SQLite (in memory) and on Postgres 16 |
+| F9 | `mage -v test:filter TestProjectPermissionMatrix` on SQLite and Postgres 16, with counts |
+| frontend | `pnpm lint`, `lint:styles`, `typecheck`, `vitest run --dir ./src` |
+| e2e | `mage test:e2e ""` with CI's env: Mailpit and Dex in Docker (CI's pinned images), a mail-enabled API on :3457, `CI=1` for Playwright's retries |
+
+Needs: a clean working tree, Homebrew `postgresql@16` (the script makes a throwaway cluster in `run/` and deletes
+it), and Docker Desktop running for the e2e step. It doesn't run the CI-only MySQL/MariaDB/ParadeDB suites,
+`test-migration-smoke`, `test-s3-integration`, `veans-test` or `test-veans-e2e`.
+
+Differences from CI: Dex's issuer is `http://127.0.0.1:5556` instead of `http://dex:5556` (same config otherwise;
+the Mac can't resolve `dex`), and the Dex image runs under amd64 emulation. Playwright runs serially
+(`workers: 1`, as in upstream's config) instead of in 6 shards, so the e2e step takes the longest.
+
+Tools in `.local-tools/` (versions pinned to CI; nothing system-wide):
+
+| Tool | Version | Where | Source |
+|---|---|---|---|
+| golangci-lint | v2.14.0 (`.github/actions/golangci-lint`) | `.local-tools/bin/` | GitHub release tarball, checksum verified |
+| Playwright Chromium + headless shell | for `@playwright/test` 1.63.0 (CI: `mcr.microsoft.com/playwright:v1.63.0-jammy`) | `.local-tools/ms-playwright/` (`PLAYWRIGHT_BROWSERS_PATH`) | `pnpm exec playwright install chromium chromium-headless-shell` |
+| swag | as pinned in `go.mod` | `.local-tools/bin/` | `go build -o .local-tools/bin/swag github.com/swaggo/swag/cmd/swag` (otherwise `mage check:got-swag` installs it into `~/go/bin`) |
+
+`source .local-tools/env.sh` (pnpm 11) or `.local-tools/env-pnpm12.sh` (pnpm 12, from v2.8.0 on) puts them on
+`PATH`; the script picks the right one from `frontend/package.json`.
+
 ## Test baseline
 
 Measured on abhi-t4gc (Windows 11, Go 1.27.3, SQLite in memory) on 2026-10-27. Logs are in `C:\dev\prime-tasks\logs\`.
