@@ -193,7 +193,7 @@ step check-swagger -                  go tool mage check:got-swag
 step golangci-lint lint_counts        golangci-lint run
 step golangci-lint-veans lint_counts  bash -c 'cd veans && golangci-lint run'
 
-# --- three lanes in parallel: Go suites on SQLite, Go suites on Postgres 16, frontend checks ---------
+# --- frontend checks, then two lanes in parallel: Go suites on SQLite and on Postgres 16 --------------
 # (They share nothing but the build cache. e2e runs alone afterwards: it's timing-sensitive under load.)
 lane_sqlite() {
 	step sqlite-feature go_counts     go tool mage test:feature
@@ -222,10 +222,12 @@ lane_frontend() {
 	step frontend-typecheck -             bash -c 'cd frontend && pnpm typecheck'
 	step frontend-unit vitest_counts      bash -c 'cd frontend && pnpm exec vitest run --dir ./src'
 }
+# The frontend checks take about a minute and vitest's module loading flaked under the Go lanes' load,
+# so they run first, then the two Go lanes in parallel.
+lane_frontend
 lane_sqlite & LANE1=$!
 lane_pg & LANE2=$!
-lane_frontend & LANE3=$!
-wait $LANE1 $LANE2 $LANE3
+wait $LANE1 $LANE2
 
 # --- Playwright e2e (needs the api-build binary) --------------------------------------------
 step e2e-playwright pw_counts         e2e_run
