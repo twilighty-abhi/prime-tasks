@@ -123,7 +123,8 @@ e2e_services_start() {
 		VIKUNJA_SERVICE_ROOTPATH="$mroot" VIKUNJA_FILES_BASEPATH="$mroot/files" \
 		VIKUNJA_DATABASE_TYPE=sqlite VIKUNJA_DATABASE_PATH=memory VIKUNJA_AUTH_OPENID_ENABLED=0 VIKUNJA_REDIS_ENABLED=0 \
 		VIKUNJA_MAILER_ENABLED=1 VIKUNJA_MAILER_HOST=127.0.0.1 VIKUNJA_MAILER_PORT=$MAILPIT_SMTP VIKUNJA_MAILER_FORCESSL=0 \
-		VIKUNJA_SERVICE_TESTINGTOKEN=$TEST_SECRET ./vikunja web >"$OUT/e2e-mailer-api.log" 2>&1 &
+		VIKUNJA_SERVICE_TESTINGTOKEN=$TEST_SECRET VIKUNJA_RATELIMIT_NOAUTHLIMIT=1000 VIKUNJA_CORS_ENABLE=1 \
+		./vikunja web >"$OUT/e2e-mailer-api.log" 2>&1 &
 	E2E_PIDS+=($!)
 	for _ in $(seq 1 60); do
 		curl -fs http://127.0.0.1:3457/api/v1/info >/dev/null && curl -fs http://127.0.0.1:$MAILPIT_HTTP/readyz >/dev/null &&
@@ -215,7 +216,7 @@ TOTAL=$(( $(date +%s) - START_ALL ))
 {
 	echo "### Local CI on \`$SHA\`"
 	echo
-	echo "Branch \`$(git branch --show-current)\`, $(date '+%Y-%m-%d %H:%M %Z'), $((TOTAL / 60)) min. Mac (arm64), go $(go env GOVERSION | sed 's/go//'), pnpm $(pnpm -v), Postgres 16 ($("$PG_BIN/postgres" --version | awk '{print $3}')), golangci-lint $(golangci-lint version --short 2>/dev/null), Playwright $(cd frontend && pnpm exec playwright --version | awk '{print $2}')."
+	echo "Branch \`$(git branch --show-current)\`, $(date '+%Y-%m-%d %H:%M %Z'), $((TOTAL / 60)) min. Mac (arm64), go $(go env GOVERSION | sed 's/go//'), pnpm $(pnpm -v), Postgres 16 ($("$PG_BIN/postgres" --version | awk '{print $3}')), golangci-lint $(golangci-lint version --short 2>/dev/null), Playwright $(cd frontend && pnpm exec playwright --version 2>/dev/null | awk '/^Version/{print $2}')."
 	[ -n "$ONLY" ] && echo && echo "**Partial run** (\`LOCAL_CI_ONLY=$ONLY\`): not valid for a merge."
 	echo
 	echo "| Step | Result | Time | Detail |"
