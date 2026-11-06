@@ -166,6 +166,11 @@ A PR may merge only after a full run passes on its head commit, with the summary
 | frontend | `pnpm lint`, `lint:styles`, `typecheck`, `vitest run --dir ./src` |
 | e2e | `mage test:e2e ""` with CI's env: Mailpit (on 127.0.0.1:11025/18025, since other projects often hold 1025/8025) and Dex in Docker (CI's pinned images), a mail-enabled API on :3457, `CI=1` for Playwright's retries |
 
+The Go suites on SQLite, the Go suites on Postgres 16 and the frontend checks run as three parallel lanes; e2e runs
+alone afterwards, because its timing-sensitive tests fail under load. The script refuses to run while a git worktree
+sits inside the repo folder: `mage check:got-swag` scans the whole folder and a second `pkg/` breaks it. Keep
+worktrees elsewhere.
+
 Needs: a clean working tree, Homebrew `postgresql@16` (the script makes a throwaway cluster in `run/` and deletes
 it), and Docker Desktop running for the e2e step. It doesn't run the CI-only MySQL/MariaDB/ParadeDB suites,
 `test-migration-smoke`, `test-s3-integration`, `veans-test` or `test-veans-e2e`.
