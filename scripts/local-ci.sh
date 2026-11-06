@@ -30,6 +30,14 @@ KNOWN_MAC_E2E_FAILURES=("tests/e2e/misc/menu.spec.ts:19:2")
 MAILPIT_SMTP=${LOCAL_CI_MAILPIT_SMTP:-11025}
 MAILPIT_HTTP=${LOCAL_CI_MAILPIT_HTTP:-18025}
 
+# swag (check:got-swag) scans the whole folder: a git worktree inside the repo duplicates pkg/ and breaks it.
+NESTED=$(git worktree list --porcelain | awk '/^worktree /{print $2}' | grep -F "$ROOT/" || true)
+if [ -n "$NESTED" ]; then
+	echo "local-ci: move these git worktrees out of the repo folder first:" >&2
+	echo "$NESTED" >&2
+	exit 2
+fi
+
 if [ -n "$(git status --porcelain --untracked-files=no)" ] && [ "${LOCAL_CI_ALLOW_DIRTY:-}" != 1 ]; then
 	echo "local-ci: the working tree has uncommitted changes; commit them so the summary names the code it ran on" >&2
 	exit 2
@@ -50,31 +58,31 @@ export GOFLAGS=-count=1
 export PLAYWRIGHT_BROWSERS_PATH="$ROOT/.local-tools/ms-playwright"
 
 mkdir -p "$OUT"
-RESULTS=()
-FAILED=0
+ROWS="$OUT/rows.d"
+rm -rf "$ROWS"; mkdir -p "$ROWS"
+ORDER=()
 START_ALL=$(date +%s)
 
 want() { [ -z "$ONLY" ] || [[ ",$ONLY," == *",$1,"* ]]; }
 
-# step <name> <detail-function or -> <command...>
+# step <name> <detail-function or -> <command...>; writes its summary row to $ROWS/<name> (safe in parallel lanes).
 step() {
 	local name=$1 detail=$2; shift 2
 	want "$name" || return 0
 	local log="$OUT/$name.log" t0 rc d
 	t0=$(date +%s)
-	printf '%-22s ' "$name"
 	"$@" >"$log" 2>&1
 	rc=$?
 	d=$(( $(date +%s) - t0 ))
 	local info=""
 	[ "$detail" != - ] && info=$($detail "$log")
 	if [ $rc -eq 0 ]; then
-		echo "pass  ${d}s  $info"
-		RESULTS+=("| $name | pass | ${d}s | $info |")
+		printf '%-22s pass  %ss  %s\n' "$name" "$d" "$info"
+		echo "| $name | pass | ${d}s | $info |" >"$ROWS/$name"
 	else
-		echo "FAIL  ${d}s  $info  (log: $log)"
-		RESULTS+=("| $name | **FAIL** (exit $rc) | ${d}s | $info |")
-		FAILED=1
+		printf '%-22s FAIL  %ss  %s  (log: %s)\n' "$name" "$d" "$info" "$log"
+		echo "| $name | **FAIL** (exit $rc) | ${d}s | $info |" >"$ROWS/$name"
+		touch "$ROWS/$name.failed"
 	fi
 }
 
@@ -185,32 +193,39 @@ step check-swagger -                  go tool mage check:got-swag
 step golangci-lint lint_counts        golangci-lint run
 step golangci-lint-veans lint_counts  bash -c 'cd veans && golangci-lint run'
 
-# --- Go suites, SQLite (in memory) ----------------------------------------------------------
-step sqlite-feature go_counts         go tool mage test:feature
-step sqlite-web go_counts             go tool mage test:web
-step sqlite-caldav go_counts          go tool mage test:caldav
-step sqlite-e2e-api go_counts         go tool mage test:e2e-api
-step sqlite-f9 f9_counts              go tool mage -v test:filter TestProjectPermissionMatrix
-
-# --- Go suites, Postgres 16 -----------------------------------------------------------------
-if want pg-feature || want pg-web || want pg-caldav || want pg-e2e-api || want pg-f9; then
-	if pg_start; then
-		step pg-feature go_counts     on_pg go tool mage test:feature
-		step pg-web go_counts         on_pg go tool mage test:web
-		step pg-caldav go_counts      on_pg go tool mage test:caldav
-		step pg-e2e-api go_counts     on_pg go tool mage test:e2e-api
-		step pg-f9 f9_counts          on_pg go tool mage -v test:filter TestProjectPermissionMatrix
-		pg_stop
-	else
-		RESULTS+=("| postgres | **FAIL** | | couldn't start Postgres 16 (see $OUT/postgres.log) |"); FAILED=1
+# --- three lanes in parallel: Go suites on SQLite, Go suites on Postgres 16, frontend checks ---------
+# (They share nothing but the build cache. e2e runs alone afterwards: it's timing-sensitive under load.)
+lane_sqlite() {
+	step sqlite-feature go_counts     go tool mage test:feature
+	step sqlite-web go_counts         go tool mage test:web
+	step sqlite-caldav go_counts      go tool mage test:caldav
+	step sqlite-e2e-api go_counts     go tool mage test:e2e-api
+	step sqlite-f9 f9_counts          go tool mage -v test:filter TestProjectPermissionMatrix
+}
+lane_pg() {
+	if want pg-feature || want pg-web || want pg-caldav || want pg-e2e-api || want pg-f9; then
+		if pg_start; then
+			step pg-feature go_counts     on_pg go tool mage test:feature
+			step pg-web go_counts         on_pg go tool mage test:web
+			step pg-caldav go_counts      on_pg go tool mage test:caldav
+			step pg-e2e-api go_counts     on_pg go tool mage test:e2e-api
+			step pg-f9 f9_counts          on_pg go tool mage -v test:filter TestProjectPermissionMatrix
+			pg_stop
+		else
+			echo "| postgres | **FAIL** | | couldn't start Postgres 16 (see $OUT/postgres.log) |" >"$ROWS/postgres"; touch "$ROWS/postgres.failed"
+		fi
 	fi
-fi
-
-# --- frontend -------------------------------------------------------------------------------
-step frontend-lint eslint_counts      bash -c 'cd frontend && pnpm lint'
-step frontend-stylelint -             bash -c 'cd frontend && pnpm lint:styles'
-step frontend-typecheck -             bash -c 'cd frontend && pnpm typecheck'
-step frontend-unit vitest_counts      bash -c 'cd frontend && pnpm exec vitest run --dir ./src'
+}
+lane_frontend() {
+	step frontend-lint eslint_counts      bash -c 'cd frontend && pnpm lint'
+	step frontend-stylelint -             bash -c 'cd frontend && pnpm lint:styles'
+	step frontend-typecheck -             bash -c 'cd frontend && pnpm typecheck'
+	step frontend-unit vitest_counts      bash -c 'cd frontend && pnpm exec vitest run --dir ./src'
+}
+lane_sqlite & LANE1=$!
+lane_pg & LANE2=$!
+lane_frontend & LANE3=$!
+wait $LANE1 $LANE2 $LANE3
 
 # --- Playwright e2e (needs the api-build binary) --------------------------------------------
 step e2e-playwright pw_counts         e2e_run
@@ -224,12 +239,17 @@ TOTAL=$(( $(date +%s) - START_ALL ))
 	echo
 	echo "| Step | Result | Time | Detail |"
 	echo "|---|---|---|---|"
-	printf '%s\n' "${RESULTS[@]}"
+	for n in frontend-install frontend-build api-build check-translations check-frontend-client check-yaegi-symbols \
+		check-swagger golangci-lint golangci-lint-veans sqlite-feature sqlite-web sqlite-caldav sqlite-e2e-api sqlite-f9 \
+		postgres pg-feature pg-web pg-caldav pg-e2e-api pg-f9 frontend-lint frontend-stylelint frontend-typecheck \
+		frontend-unit e2e-playwright; do
+		[ -f "$ROWS/$n" ] && cat "$ROWS/$n"
+	done
 	echo
-	if [ $FAILED -eq 0 ]; then echo "**All steps passed.**"; else echo "**Some steps failed.** Logs: \`$OUT\`"; fi
+	if [ -z "$(ls "$ROWS"/*.failed 2>/dev/null)" ]; then echo "**All steps passed.**"; else echo "**Some steps failed.** Logs: \`$OUT\`"; fi
 	echo
 	echo "Not run locally (CI-only infrastructure): MySQL/MariaDB/ParadeDB suites, test-migration-smoke, test-s3-integration, veans-test, test-veans-e2e."
 } >"$OUT/summary.md"
 echo
 cat "$OUT/summary.md"
-exit $FAILED
+[ -z "$(ls "$ROWS"/*.failed 2>/dev/null)" ]
