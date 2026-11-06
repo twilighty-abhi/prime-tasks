@@ -17,9 +17,11 @@ package webtests
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"testing"
 
+	"github.com/labstack/echo/v5"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -77,4 +79,46 @@ func TestHumaProjectSharedVia(t *testing.T) {
 		assert.NotContains(t, rec.Body.String(), "shared_via")
 		assert.NotContains(t, rec.Body.String(), "owner_display_name")
 	})
+}
+
+// F3 + v2.8.0 trash: a trashed project leaves the shared list of everyone it is shared with,
+// and comes back on restore.
+func TestHumaProjectSharedViaTrashed(t *testing.T) {
+	ids := func(t *testing.T, e *echo.Echo, token string) map[int64]bool {
+		rec := humaRequest(t, e, http.MethodGet, "/api/v2/projects?per_page=100", "", token, "")
+		require.Equal(t, http.StatusOK, rec.Code, "body: %s", rec.Body.String())
+		var body struct {
+			Items []struct {
+				ID int64 `json:"id"`
+			} `json:"items"`
+		}
+		require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &body))
+		seen := map[int64]bool{}
+		for _, p := range body.Items {
+			seen[p.ID] = true
+		}
+		return seen
+	}
+
+	// Fixtures: user6 owns both; project 9 is shared with user1 directly, project 6 through
+	// testteam2_read_only_on_project6.
+	for name, projectID := range map[string]int64{"user share": 9, "team share": 6} {
+		t.Run(name, func(t *testing.T) {
+			e, err := setupTestEnv()
+			require.NoError(t, err)
+			owner := humaTokenFor(t, &testuser6)
+			shared := humaTokenFor(t, &testuser1)
+			path := fmt.Sprintf("/api/v2/projects/%d", projectID)
+
+			require.True(t, ids(t, e, shared)[projectID], "listed before trashing")
+
+			rec := humaRequest(t, e, http.MethodDelete, path, "", owner, "")
+			require.Equal(t, http.StatusNoContent, rec.Code, "body: %s", rec.Body.String())
+			assert.False(t, ids(t, e, shared)[projectID], "not listed while trashed")
+
+			rec = humaRequest(t, e, http.MethodPost, path+"/restore", "", owner, "")
+			require.Equal(t, http.StatusOK, rec.Code, "body: %s", rec.Body.String())
+			assert.True(t, ids(t, e, shared)[projectID], "listed again after restore")
+		})
+	}
 }

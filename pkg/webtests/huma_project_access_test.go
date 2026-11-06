@@ -65,4 +65,34 @@ func TestHumaProjectAccess(t *testing.T) {
 		rec := humaRequest(t, e, http.MethodGet, "/api/v2/projects/1/access", "", humaTokenFor(t, &user.User{ID: 3, Username: "user3"}), "")
 		assert.Equal(t, http.StatusForbidden, rec.Code, "body: %s", rec.Body.String())
 	})
+
+	t.Run("trashed project is not found for the owner and a shared user, until restored", func(t *testing.T) {
+		e, err := setupTestEnv()
+		require.NoError(t, err)
+		// Fixture: user6 owns project 9, which is shared directly with user1.
+		owner := humaTokenFor(t, &testuser6)
+		shared := humaTokenFor(t, &testuser1)
+
+		rec := humaRequest(t, e, http.MethodDelete, "/api/v2/projects/9", "", owner, "")
+		require.Equal(t, http.StatusNoContent, rec.Code, "body: %s", rec.Body.String())
+
+		// Same as upstream's GET /projects/{id}: 404 with ErrProjectIsInTrash (3018) for people
+		// who could reach it, plain ErrProjectDoesNotExist (3001) for everyone else.
+		for name, token := range map[string]string{"owner": owner, "shared user": shared} {
+			rec = humaRequest(t, e, http.MethodGet, "/api/v2/projects/9/access", "", token, "")
+			assert.Equal(t, http.StatusNotFound, rec.Code, "%s body: %s", name, rec.Body.String())
+			assert.Contains(t, rec.Body.String(), `"code":3018`, "%s: ErrProjectIsInTrash", name)
+		}
+		rec = humaRequest(t, e, http.MethodGet, "/api/v2/projects/9/access", "", humaTokenFor(t, &testuser13), "")
+		assert.Equal(t, http.StatusNotFound, rec.Code, "stranger body: %s", rec.Body.String())
+		assert.Contains(t, rec.Body.String(), `"code":3001`, "stranger: ErrProjectDoesNotExist")
+
+		rec = humaRequest(t, e, http.MethodPost, "/api/v2/projects/9/restore", "", owner, "")
+		require.Equal(t, http.StatusOK, rec.Code, "body: %s", rec.Body.String())
+
+		for name, token := range map[string]string{"owner": owner, "shared user": shared} {
+			rec = humaRequest(t, e, http.MethodGet, "/api/v2/projects/9/access", "", token, "")
+			assert.Equal(t, http.StatusOK, rec.Code, "%s body: %s", name, rec.Body.String())
+		}
+	})
 }

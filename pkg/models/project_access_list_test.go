@@ -103,3 +103,49 @@ func TestProjectAccessList(t *testing.T) {
 		assert.Error(t, err)
 	})
 }
+
+// F5 + v2.8.0 trash: a trashed project has no access list, for its owner or anyone it is
+// shared with, until it is restored.
+func TestProjectAccessListTrashed(t *testing.T) {
+	owner := &user.User{ID: 1, Username: "user1"}
+	shared := &user.User{ID: 2, Username: "user2"}
+
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	project := &Project{Title: "access trashed"}
+	require.NoError(t, project.Create(s, owner))
+	require.NoError(t, (&ProjectUser{Username: shared.Username, ProjectID: project.ID, Permission: PermissionRead}).Create(s, owner))
+	require.NoError(t, trashProject(s, project, owner))
+	require.NoError(t, s.Commit())
+	s.Close()
+
+	read := func(a web.Auth) error {
+		s := db.NewSession()
+		defer s.Close()
+		_, _, _, err := (&ProjectAccessList{ProjectID: project.ID}).ReadAll(s, a, "", 1, 0)
+		return err
+	}
+
+	// Like upstream's own project reads (GET /projects/{id}, /projects/{id}/users): people who
+	// could reach the project get ErrProjectIsInTrash (HTTP 404), everyone else ErrProjectDoesNotExist.
+	for name, a := range map[string]web.Auth{"owner": owner, "shared user": shared} {
+		t.Run(name+" gets not found while trashed", func(t *testing.T) {
+			err := read(a)
+			require.Error(t, err)
+			assert.True(t, IsErrProjectIsInTrash(err), "got %T %v", err, err)
+		})
+	}
+	t.Run("a stranger gets project does not exist while trashed", func(t *testing.T) {
+		err := read(&user.User{ID: 4, Username: "user4"})
+		require.Error(t, err)
+		assert.True(t, IsErrProjectDoesNotExist(err), "got %T %v", err, err)
+	})
+
+	require.NoError(t, restoreProjectForTest(t, project.ID, owner))
+
+	for name, a := range map[string]web.Auth{"owner": owner, "shared user": shared} {
+		t.Run(name+" gets the list again after restore", func(t *testing.T) {
+			require.NoError(t, read(a))
+		})
+	}
+}
