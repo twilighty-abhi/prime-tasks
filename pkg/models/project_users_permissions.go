@@ -56,6 +56,12 @@ func (lu *ProjectUser) isOwnShare(s *xorm.Session, a web.Auth) (bool, error) {
 	if target.ID != u.ID {
 		return false, nil
 	}
+	// A trashed project falls through to the admin check, which answers 404 like upstream's
+	// share routes; the soft-delete column on Project keeps trashed rows out of this query.
+	live, err := s.Where(builder.Eq{"id": lu.ProjectID}).Exist(&Project{})
+	if err != nil || !live {
+		return false, err
+	}
 	return s.Where(builder.Eq{"user_id": u.ID, "project_id": lu.ProjectID}).Exist(&ProjectUser{})
 }
 
@@ -68,10 +74,6 @@ func (lu *ProjectUser) canDoProjectUser(s *xorm.Session, a web.Auth) (bool, erro
 	// Link shares aren't allowed to do anything
 	if _, is := a.(*LinkSharing); is {
 		return false, nil
-	}
-
-	if isInstanceAdmin(s, a) {
-		return true, nil
 	}
 
 	// Get the project and check if the user has write access on it

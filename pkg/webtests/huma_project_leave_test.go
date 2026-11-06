@@ -20,6 +20,7 @@ import (
 	"net/http"
 	"testing"
 
+	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/auth"
 
@@ -86,4 +87,21 @@ func TestHumaProjectUserDeleteSelf(t *testing.T) {
 
 	rec = humaRequest(t, e, http.MethodDelete, "/api/v2/projects/9/users/user1", "", token, "")
 	assert.Equal(t, http.StatusNoContent, rec.Code, "body: %s", rec.Body.String())
+}
+
+// F4 + v2.8.0 trash: removing yourself by username is refused for a trashed project, like
+// DELETE .../shares/me, so the share is still there after a restore.
+func TestHumaProjectUserDeleteSelfTrashed(t *testing.T) {
+	e, err := setupTestEnv()
+	require.NoError(t, err)
+	// Fixture: user6 owns project 9, which is shared directly with user1.
+	owner := humaTokenFor(t, &testuser6)
+	token := humaTokenFor(t, &testuser1)
+
+	rec := humaRequest(t, e, http.MethodDelete, "/api/v2/projects/9", "", owner, "")
+	require.Equal(t, http.StatusNoContent, rec.Code, "body: %s", rec.Body.String())
+
+	rec = humaRequest(t, e, http.MethodDelete, "/api/v2/projects/9/users/user1", "", token, "")
+	assert.Equal(t, http.StatusNotFound, rec.Code, "body: %s", rec.Body.String())
+	db.AssertExists(t, "users_projects", map[string]interface{}{"project_id": 9, "user_id": 1}, false)
 }

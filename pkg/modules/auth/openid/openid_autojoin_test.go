@@ -42,7 +42,7 @@ func TestGetOrCreateUserAutoJoinsTeamsOnce(t *testing.T) {
 	s := db.NewSession()
 	defer s.Close()
 	cl := &claims{Email: "oidc-joiner@example.org", PreferredUsername: "oidc-joiner"}
-	u, err := getOrCreateUser(s, cl, &Provider{}, &oidc.IDToken{Issuer: "https://some.issuer", Subject: "autojoin-1"})
+	u, _, err := getOrCreateUser(s, cl, &Provider{}, &oidc.IDToken{Issuer: "https://some.issuer", Subject: "autojoin-1"})
 	require.NoError(t, err)
 	require.NoError(t, s.Commit())
 	events.DispatchPending(context.Background(), s)

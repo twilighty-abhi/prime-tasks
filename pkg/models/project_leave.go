@@ -34,6 +34,16 @@ func LeaveProject(s *xorm.Session, a web.Auth, projectID int64) error {
 		return err
 	}
 
+	// A trashed project behaves as if it didn't exist for share changes, like upstream's share
+	// routes: the soft-delete column on Project keeps trashed rows out of this query.
+	exists, err := s.Where(builder.Eq{"id": projectID}).Exist(&Project{})
+	if err != nil {
+		return err
+	}
+	if !exists {
+		return ErrProjectDoesNotExist{ID: projectID}
+	}
+
 	hasDirectShare, err := s.
 		Where(builder.Eq{"user_id": u.ID, "project_id": projectID}).
 		Exist(&ProjectUser{})
