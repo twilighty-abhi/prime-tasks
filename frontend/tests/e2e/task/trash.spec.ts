@@ -1,4 +1,6 @@
 import {test, expect} from '../../support/fixtures'
+// prime-tasks Y1: the title uses the product name, not "Vikunja".
+import {PRODUCT_NAME} from '../../../src/constants/product'
 
 import {ProjectFactory} from '../../factories/project'
 import {TaskFactory} from '../../factories/task'
@@ -208,7 +210,7 @@ test.describe('Trash', () => {
 		await expect(notice).toContainText('This project is in the trash.')
 		await expect(page.locator('[data-cy="taskInTrashNotice"]')).toHaveCount(0)
 		await expect(page).toHaveURL(/\/tasks\/1/)
-		await expect(page).toHaveTitle('Trash | Vikunja')
+		await expect(page).toHaveTitle(`Trash | ${PRODUCT_NAME}`)
 		await expect(page.locator('.global-notification')).not.toContainText('This project is in the trash')
 		await notice.getByRole('button', {name: 'Restore', exact: true}).click()
 

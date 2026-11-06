@@ -1,4 +1,6 @@
 import {test, expect} from '../../support/fixtures'
+// prime-tasks Y1: the title uses the product name, not "Vikunja".
+import {PRODUCT_NAME} from '../../../src/constants/product'
 import type {Page} from '@playwright/test'
 
 function dateKey(date: Date) {
@@ -13,7 +15,7 @@ async function pickPreset(page: Page, name: string) {
 
 	await trigger.click()
 	await popup.locator('.selections').getByRole('button', {name, exact: true}).click()
-	await expect(page).toHaveTitle(`${name} | Vikunja`)
+	await expect(page).toHaveTitle(`${name} | ${PRODUCT_NAME}`)
 	if (!await popup.isVisible()) {
 		await trigger.click()
 	}
