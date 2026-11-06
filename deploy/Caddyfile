@@ -1,4 +1,5 @@
 {
+	# ACME_EMAIL is required by docker-compose.yml: an empty `email` line is a Caddyfile parse error.
 	email {$ACME_EMAIL}
 }
 

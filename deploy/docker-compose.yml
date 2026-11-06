@@ -74,7 +74,8 @@ services:
       - prime-tasks
     environment:
       PRIME_DOMAIN: ${PRIME_DOMAIN:?set PRIME_DOMAIN in .env}
-      ACME_EMAIL: ${ACME_EMAIL:-}
+      # Caddy's global `email` option needs a value; an empty one stops Caddy from loading the Caddyfile.
+      ACME_EMAIL: ${ACME_EMAIL:?set ACME_EMAIL in .env (the Let's Encrypt account email; any address works with tls internal)}
     ports:
       - "80:80"
       - "443:443"

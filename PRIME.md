@@ -26,6 +26,7 @@ Rules for the fork:
 | # | What | PR | Config flag | Upstream status |
 |---|---|---|---|---|
 | B1 | Magefile compiles on Windows (process-group helpers split by OS) | [#1](https://github.com/twilighty-abhi/prime-tasks/pull/1) | none (build tooling) | not sent yet; good upstream candidate |
+| D1 | Office VM deploy: `deploy/` compose stack (app, Postgres 16, Caddy, one-shot file permissions), `config.yml`, `.env.example`, `backup.sh`, `sql/flip-discoverable.sql`, README with a license-free account, team, sharing and password-reset setup; `ACME_EMAIL` is required | [#1](https://github.com/twilighty-abhi/prime-tasks/pull/1), license-free setup in [#10](https://github.com/twilighty-abhi/prime-tasks/pull/10) | none (deploy files only) | fork-only |
 | B2 | Test fixtures load on Windows (`path.Join` for `embed.FS` paths) | [#1](https://github.com/twilighty-abhi/prime-tasks/pull/1) | none (test tooling) | not sent yet; good upstream candidate |
 | Y1 | Yuyu theme layer: tokens, Vikunja variables mapped onto them, self-hosted fonts, component rules, `PRODUCT_NAME` branding | [#5](https://github.com/twilighty-abhi/prime-tasks/pull/5) | none (branding) | fork-only |
 | F9 | Permission test matrix for project access (`pkg/models/project_permission_matrix_test.go`) | [#1](https://github.com/twilighty-abhi/prime-tasks/pull/1) | none (tests only) | fork-only |
