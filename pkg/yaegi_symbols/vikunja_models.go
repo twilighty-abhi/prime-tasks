@@ -16,6 +16,7 @@ func init() {
 		"APITokenPrefix":                                   reflect.ValueOf(constant.MakeFromLiteral("\"tk_\"", token.STRING, 0)),
 		"AddPositionsToTasks":                              reflect.ValueOf(models.AddPositionsToTasks),
 		"AddProjectSharedVia":                              reflect.ValueOf(models.AddProjectSharedVia),
+		"AutoJoinTeams":                                    reflect.ValueOf(models.AutoJoinTeams),
 		"BucketConfigurationModeFilter":                    reflect.ValueOf(models.BucketConfigurationModeFilter),
 		"BucketConfigurationModeManual":                    reflect.ValueOf(models.BucketConfigurationModeManual),
 		"BucketConfigurationModeNone":                      reflect.ValueOf(models.BucketConfigurationModeNone),
