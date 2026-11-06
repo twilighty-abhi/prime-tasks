@@ -24,6 +24,7 @@ import (
 	"code.vikunja.io/api/pkg/user"
 
 	"github.com/stretchr/testify/require"
+	"xorm.io/builder"
 )
 
 // F6 (prime-tasks): auto-join teams by email domain.
@@ -124,7 +125,20 @@ func TestAutoJoinTeamsByEmailDomain(t *testing.T) {
 		u := newUser(t, "twice", "twice@example.org", 0)
 		fire(t, u)
 		fire(t, u)
-		db.AssertExists(t, "team_members", map[string]interface{}{"team_id": 1, "user_id": u.ID}, false)
+		db.AssertCount(t, "team_members", builder.Eq{"team_id": 1, "user_id": u.ID}, 1)
+	})
+
+	t.Run("joining directly, then the event arriving, joins once", func(t *testing.T) {
+		// The CLI path: AutoJoinTeams runs before commit, and the listener may still get the event.
+		db.LoadAndAssertFixtures(t)
+		rules(map[string]interface{}{"domain": "example.org", "team_id": 1})
+		u := newUser(t, "direct", "direct@example.org", 0)
+		s := db.NewSession()
+		require.NoError(t, AutoJoinTeams(s, u.ID))
+		require.NoError(t, s.Commit())
+		s.Close()
+		fire(t, u)
+		db.AssertCount(t, "team_members", builder.Eq{"team_id": 1, "user_id": u.ID}, 1)
 	})
 
 	t.Run("empty config changes nothing", func(t *testing.T) {
