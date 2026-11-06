@@ -1,6 +1,7 @@
 # Deploying prime-tasks on the office VM
 
-Three containers: `prime-tasks` (API and frontend in one binary), `db` (Postgres 16) and `caddy` (TLS on 80/443).
+Four services (one runs once to set file permissions): `prime-tasks` (API and frontend in one binary), `db`
+(Postgres 16), `caddy` (TLS on 80/443) and `files-permissions` (chowns the files volume for the app, then exits).
 Volumes: `prime-tasks-pgdata` (database), `prime-tasks-files` (attachments, avatars, backgrounds),
 `prime-tasks-caddy-data` (certificates).
 
@@ -18,19 +19,45 @@ sudo mkdir -p /opt/prime-tasks && sudo chown "$USER" /opt/prime-tasks
 git clone -b prime https://github.com/twilighty-abhi/prime-tasks.git /opt/prime-tasks
 cd /opt/prime-tasks/deploy
 cp .env.example .env
-# fill in PRIME_DOMAIN, ACME_EMAIL, PRIME_TASKS_VERSION, and two `openssl rand -hex 32` values
+# fill in PRIME_DOMAIN, ACME_EMAIL (required), PRIME_TASKS_VERSION, and two `openssl rand -hex 32` values
 chmod 600 .env
-docker compose pull          # or `docker compose build` to build from this checkout
+docker compose build         # until the first release; afterwards `docker compose pull` (see below)
 docker compose up -d
 docker compose logs -f prime-tasks   # wait for "HTTP server listening"
 ```
 
-Registration is off. Create the first account and make it an instance admin:
+**Image: build or pull.** The image comes from GHCR once a `prime-v*` tag has been released (see PRIME.md).
+Until the first release there is nothing to pull, so `docker compose build` builds it from this checkout.
+After it, set `PRIME_TASKS_VERSION` to the release (for example `2.7.1` for tag `prime-v2.7.1`) and use
+`docker compose pull` instead.
 
-```bash
-docker compose exec prime-tasks /app/vikunja/vikunja user create -u <username> -e <email>
-docker compose exec prime-tasks /app/vikunja/vikunja user set-admin <username>
-```
+### Accounts, teams and sharing (no license needed)
+
+prime-tasks runs without a Vikunja license, so the instance admin panel and `vikunja user set-admin` are not
+available. Nothing below needs them.
+
+- **Accounts.** Registration is off. Create each account on the VM:
+
+  ```bash
+  docker compose exec prime-tasks /app/vikunja/vikunja user create -u <username> -e <email>
+  ```
+
+  It asks for a password (or pass `-p`). Later, Google sign-in can create accounts on first login instead
+  (`auth.openid` in `config.yml`).
+- **Teams.** New users join their teams automatically by email domain (F6): list the domains and team ids under
+  `service.autojointeams` in `config.yml` and restart the app. This applies to `user create`, Google sign-in and
+  registration alike. Whoever creates a team is its admin and can add or remove members on the Teams page.
+- **Sharing.** Each project's owner (and anyone they give admin access) manages who can see it, from **Share** in
+  the project header. With `service.orgdirectory` on, everyone can find everyone by name.
+- **Passwords.** The mailer is off, so there are no reset emails. To reset a password, find the user's id and set
+  a new one:
+
+  ```bash
+  docker compose exec prime-tasks /app/vikunja/vikunja user list
+  docker compose exec prime-tasks /app/vikunja/vikunja user reset-password <user id> --direct
+  ```
+
+  It asks for the new password (or pass `-p`).
 
 Then install the nightly backup (see [Backups](#backups)).
 
