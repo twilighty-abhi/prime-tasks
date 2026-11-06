@@ -114,10 +114,10 @@ A PR may merge only after a full run passes on its head commit, with the summary
 | build | `pnpm install --frozen-lockfile`, `pnpm build`, `mage build` |
 | generators | `mage check:translations`, `check:frontend-client`, `check:yaegi-symbols`, `check:got-swag` (swagger) |
 | Go lint | `golangci-lint run` in the repo and in `veans/` |
-| Go suites | `mage test:feature`, `test:web`, `test:caldav`, `test:e2e-api`, each on SQLite (in memory) and on Postgres 16 |
+| Go suites | `mage test:feature`, `test:web`, `test:caldav`, `test:e2e-api`, each on SQLite (in memory) and on Postgres 16, with `GOFLAGS=-count=1` so no cached result is reused |
 | F9 | `mage -v test:filter TestProjectPermissionMatrix` on SQLite and Postgres 16, with counts |
 | frontend | `pnpm lint`, `lint:styles`, `typecheck`, `vitest run --dir ./src` |
-| e2e | `mage test:e2e ""` with CI's env: Mailpit and Dex in Docker (CI's pinned images), a mail-enabled API on :3457, `CI=1` for Playwright's retries |
+| e2e | `mage test:e2e ""` with CI's env: Mailpit (on 127.0.0.1:11025/18025, since other projects often hold 1025/8025) and Dex in Docker (CI's pinned images), a mail-enabled API on :3457, `CI=1` for Playwright's retries |
 
 Needs: a clean working tree, Homebrew `postgresql@16` (the script makes a throwaway cluster in `run/` and deletes
 it), and Docker Desktop running for the e2e step. It doesn't run the CI-only MySQL/MariaDB/ParadeDB suites,

@@ -24,6 +24,9 @@ PG_SOCK=$ROOT/run/lcpg
 DEX_IMAGE=ghcr.io/go-vikunja/dex-testing:main@sha256:d401c06a9f8fd36ece446a07499b827232af7f21eb36872a76c9eac4d0c77bab
 MAILPIT_IMAGE=axllent/mailpit:v1.31.6@sha256:23fe39e81bde596a918000b3135c0f85dc8bb4c9ea6be274b051143f3e300387
 TEST_SECRET=averyLongSecretToSe33dtheDB
+# Mailpit on its own ports: other local projects often hold 1025/8025.
+MAILPIT_SMTP=${LOCAL_CI_MAILPIT_SMTP:-11025}
+MAILPIT_HTTP=${LOCAL_CI_MAILPIT_HTTP:-18025}
 
 if [ -n "$(git status --porcelain --untracked-files=no)" ] && [ "${LOCAL_CI_ALLOW_DIRTY:-}" != 1 ]; then
 	echo "local-ci: the working tree has uncommitted changes; commit them so the summary names the code it ran on" >&2
@@ -37,6 +40,8 @@ else
 	source "$ROOT/.local-tools/env.sh"
 fi
 export GOTOOLCHAIN=local
+# Never reuse cached test results: every run tests this commit for real.
+export GOFLAGS=-count=1
 export PLAYWRIGHT_BROWSERS_PATH="$ROOT/.local-tools/ms-playwright"
 
 mkdir -p "$OUT"
@@ -101,7 +106,7 @@ E2E_PIDS=()
 e2e_services_start() {
 	docker info >/dev/null 2>&1 || { echo "Docker isn't running"; return 1; }
 	docker rm -f lci-mailpit lci-dex >/dev/null 2>&1
-	docker run -d --name lci-mailpit -p 127.0.0.1:1025:1025 -p 127.0.0.1:8025:8025 "$MAILPIT_IMAGE" >/dev/null || return 1
+	docker run -d --name lci-mailpit -p 127.0.0.1:$MAILPIT_SMTP:1025 -p 127.0.0.1:$MAILPIT_HTTP:8025 "$MAILPIT_IMAGE" >/dev/null || return 1
 	# CI reaches Dex as http://dex:5556; the Mac can't resolve "dex", so the same config with a 127.0.0.1 issuer.
 	docker run --rm --platform linux/amd64 --entrypoint cat "$DEX_IMAGE" /etc/dex/config.docker.yaml |
 		sed 's#^issuer: http://dex:5556#issuer: http://127.0.0.1:5556#' >"$OUT/dex-config.yaml" || return 1
@@ -111,11 +116,11 @@ e2e_services_start() {
 	VIKUNJA_SERVICE_INTERFACE=127.0.0.1:3457 VIKUNJA_SERVICE_PUBLICURL=http://127.0.0.1:4173/ \
 		VIKUNJA_SERVICE_ROOTPATH="$mroot" VIKUNJA_FILES_BASEPATH="$mroot/files" \
 		VIKUNJA_DATABASE_TYPE=sqlite VIKUNJA_DATABASE_PATH=memory VIKUNJA_AUTH_OPENID_ENABLED=0 VIKUNJA_REDIS_ENABLED=0 \
-		VIKUNJA_MAILER_ENABLED=1 VIKUNJA_MAILER_HOST=127.0.0.1 VIKUNJA_MAILER_PORT=1025 VIKUNJA_MAILER_FORCESSL=0 \
+		VIKUNJA_MAILER_ENABLED=1 VIKUNJA_MAILER_HOST=127.0.0.1 VIKUNJA_MAILER_PORT=$MAILPIT_SMTP VIKUNJA_MAILER_FORCESSL=0 \
 		VIKUNJA_SERVICE_TESTINGTOKEN=$TEST_SECRET ./vikunja web >"$OUT/e2e-mailer-api.log" 2>&1 &
 	E2E_PIDS+=($!)
 	for _ in $(seq 1 60); do
-		curl -fs http://127.0.0.1:3457/api/v1/info >/dev/null && curl -fs http://127.0.0.1:8025/readyz >/dev/null &&
+		curl -fs http://127.0.0.1:3457/api/v1/info >/dev/null && curl -fs http://127.0.0.1:$MAILPIT_HTTP/readyz >/dev/null &&
 			curl -fs http://127.0.0.1:5556/.well-known/openid-configuration >/dev/null && return 0
 		sleep 2
 	done
@@ -129,7 +134,7 @@ e2e_run() {
 	e2e_services_start || { e2e_services_stop; return 1; }
 	# CI=1 gives Playwright the same retries (2) and settings as the CI job.
 	CI=1 VIKUNJA_E2E_FRONTEND_PORT=4173 VIKUNJA_E2E_SKIP_BUILD=true VIKUNJA_E2E_TESTING_TOKEN=$TEST_SECRET TEST_SECRET=$TEST_SECRET \
-		MAILER_API_URL=http://127.0.0.1:3457/api/v1 MAILPIT_URL=http://127.0.0.1:8025 \
+		MAILER_API_URL=http://127.0.0.1:3457/api/v1 MAILPIT_URL=http://127.0.0.1:$MAILPIT_HTTP \
 		VIKUNJA_AUTH_OPENID_ENABLED=1 VIKUNJA_AUTH_OPENID_PROVIDERS_DEX_NAME=Dex \
 		VIKUNJA_AUTH_OPENID_PROVIDERS_DEX_AUTHURL=http://127.0.0.1:5556 VIKUNJA_AUTH_OPENID_PROVIDERS_DEX_CLIENTID=vikunja \
 		VIKUNJA_AUTH_OPENID_PROVIDERS_DEX_CLIENTSECRET=secret \
