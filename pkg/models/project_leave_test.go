@@ -87,6 +87,21 @@ func TestLeaveProject(t *testing.T) {
 		})
 	}
 
+	t.Run("a trashed project can't be left, like any other share change on it", func(t *testing.T) {
+		// v2.8.0 moves deleted projects to the trash; upstream's share routes answer 404 for them.
+		parent, _ := setup(t)
+		shareWithUser(t, parent.ID, PermissionRead)
+		s := db.NewSession()
+		require.NoError(t, trashProject(s, parent, owner))
+		require.NoError(t, s.Commit())
+		s.Close()
+
+		err := leave(t, leaver, parent.ID)
+		require.Error(t, err)
+		assert.True(t, IsErrProjectDoesNotExist(err), "got %v", err)
+		db.AssertExists(t, "users_projects", map[string]interface{}{"project_id": parent.ID, "user_id": leaver.ID}, false)
+	})
+
 	t.Run("team share names the team", func(t *testing.T) {
 		parent, _ := setup(t)
 		shareWithTeam(t, "leave team", parent.ID)
