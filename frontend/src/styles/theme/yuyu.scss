@@ -558,6 +558,26 @@ body {
   .modal-dialog > .modal-container > .close {
     color: #FFFFFF;
   }
+
+  // The task breadcrumb's ">" (TaskDetailView, BucketSelect) is text: muted, not the decorative grey,
+  // so it passes 3:1 in both themes.
+  .task-breadcrumb-separator {
+    color: var(--yy-text-muted);
+  }
+
+  // The card's close button (shown on phones) is a round icon button, so the focus ring is round too.
+  .card-header-icon.close {
+    align-self: center;
+    inline-size: 40px;
+    block-size: 40px;
+    padding: 0;
+    margin-inline-end: var(--yy-space-2);
+    border-radius: var(--yy-radius-full);
+
+    &:hover {
+      background: var(--yy-bg-emphasis);
+    }
+  }
 }
 
 // ---------------------------------------------------------------------------

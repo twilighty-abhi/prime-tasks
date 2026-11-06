@@ -1,6 +1,6 @@
 <template>
 	<template v-if="kanbanView">
-		<span class="has-text-grey-light"> &gt; </span>
+		<span class="task-breadcrumb-separator"> &gt; </span>
 		<template v-if="canWrite">
 			<Dropdown>
 				<template #trigger="{toggleOpen, open}">

@@ -6,6 +6,7 @@ import {UserProjectFactory} from '../../factories/users_project'
 import {login} from '../../support/authenticateUser'
 import {createProjects} from '../project/prepareProjects'
 
+// prime-tasks F5: people and teams are shared from one dialog.
 for (const kind of ['user', 'team'] as const) {
 	test(`adds, changes and removes a project ${kind} share`, async ({authenticatedPage: page}) => {
 		const users = await UserFactory.create(2)
@@ -14,32 +15,34 @@ for (const kind of ['user', 'team'] as const) {
 		await TeamMemberFactory.create(1, {team_id: team.id, user_id: 1, admin: true})
 		const name = kind === 'user' ? users[1].username : team.name
 		await page.goto('/projects/1/settings/share')
-		const section = page.getByRole('heading', {name: `Shared with these ${kind}s`, exact: true}).locator('..')
-		await section.getByRole('combobox', {name: `Search for a ${kind} to share this project with`}).pressSequentially(name, {delay: 10})
-		await expect(section.locator('.search-results').getByRole('option').first()).toContainText(name)
-		await section.locator('.search-results').getByRole('option').first().click()
-		const share = section.getByRole('button', {name: 'Share', exact: true})
-		await share.focus()
-		await share.press('Enter')
-		const row = section.getByRole('row').filter({hasText: name})
+		const dialog = page.locator('.share-dialog')
+		await dialog.getByRole('combobox', {name: 'Search for people or teams'}).pressSequentially(name, {delay: 10})
+		const option = dialog.getByRole('listbox').getByRole('option').filter({hasText: name})
+		await expect(option).toBeVisible()
+		const created = page.waitForResponse(r => new URL(r.url()).pathname === `/api/v2/projects/1/${kind}s` && r.request().method() === 'POST')
+		await option.getByRole('button').click()
+		expect((await created).ok()).toBe(true)
+
+		const row = dialog.locator('.share-dialog__row').filter({hasText: name})
 		await expect(row).toBeVisible()
-		await expect(share).toBeFocused()
-		if (kind === 'team') {
-			await expect(row.getByRole('link', {name})).toHaveAttribute('href', `/teams/${team.id}/edit`)
-		}
-		await row.getByRole('combobox').selectOption('1')
-		await expect(row.locator('td.type')).toHaveText('Read & write')
+		// A direct share's source reads Direct for people and Team for teams.
+		await expect(row).toContainText(kind === 'user' ? 'Direct' : 'Team')
+		const permission = row.getByRole('combobox', {name: `Permission for ${name}`})
+		// New shares get the role picked next to the search, read & write by default.
+		await expect(permission).toHaveValue('1')
+		await permission.selectOption('2')
+		await expect(permission).toHaveValue('2')
 		await page.reload()
-		await expect(row.locator('td.type')).toHaveText('Read & write')
-		await row.getByRole('button', {name: `Remove this ${kind}`}).click()
-		const removeDialog = page.getByRole('dialog', {name: `Remove a ${kind} from the project`})
-		await removeDialog.getByRole('button', {name: 'Cancel', exact: true}).click()
-		await expect(removeDialog).toHaveCount(0)
-		await expect(row).toBeVisible()
-		await row.getByRole('button', {name: `Remove this ${kind}`}).click()
-		await page.locator('dialog[open]').getByRole('button', {name: 'Do it!'}).click()
+		await expect(permission).toHaveValue('2')
+
+		await row.getByRole('button', {name: `Remove ${name}`}).click()
+		await row.getByRole('button', {name: 'Cancel', exact: true}).click()
+		await expect(row.getByRole('button', {name: `Remove ${name}`})).toBeVisible()
+		await row.getByRole('button', {name: `Remove ${name}`}).click()
+		await row.getByRole('button', {name: 'Remove', exact: true}).click()
 		await expect(row).toHaveCount(0)
 		await page.reload()
+		await expect(dialog.locator('.share-dialog__row').first()).toBeVisible()
 		await expect(row).toHaveCount(0)
 	})
 }
@@ -52,14 +55,14 @@ for (const kind of ['user', 'team'] as const) {
 		await TeamMemberFactory.create(1, {team_id: team.id, user_id: 1, admin: true})
 		const name = kind === 'user' ? users[1].username : team.name
 		await page.goto('/projects/1/settings/share')
-		const section = page.getByRole('heading', {name: `Shared with these ${kind}s`, exact: true}).locator('..')
-		const search = section.getByRole('combobox', {name: `Search for a ${kind} to share this project with`})
+		const dialog = page.locator('.share-dialog')
+		const search = dialog.getByRole('combobox', {name: 'Search for people or teams'})
 		await search.pressSequentially(name, {delay: 10})
-		await expect(section.locator('.search-results').getByRole('option')).not.toHaveCount(0)
-		// fill('') skips the keyup handler the search binds to; select-all + Backspace is a real keystroke.
+		await expect(dialog.getByRole('listbox').getByRole('option').filter({hasText: name})).toBeVisible()
 		await search.press('ControlOrMeta+a')
 		await search.press('Backspace')
-		await expect(section.locator('.search-results').getByRole('option')).toHaveCount(0)
+		// Scoped to the results: the role picker's <option>s are options too.
+		await expect(dialog.getByRole('listbox')).toHaveCount(0)
 	})
 }
 
@@ -69,9 +72,10 @@ test('read-only members cannot manage shares', async ({page, apiContext}) => {
 	await UserProjectFactory.create(1, {project_id: 1, user_id: reader.id, permission: 0})
 	await login(page, apiContext, reader)
 	await page.goto('/projects/1/settings/share')
-	const section = page.getByRole('heading', {name: 'Shared with these users', exact: true}).locator('..')
-	await expect(section.getByRole('row').filter({hasText: reader.username}).getByText('You', {exact: true})).toBeVisible()
-	await expect(section.getByRole('combobox', {name: 'Search for a user to share this project with'})).toHaveCount(0)
-	await expect(section.getByRole('button', {name: 'Share', exact: true})).toHaveCount(0)
-	await expect(section.getByRole('button', {name: 'Remove this user'})).toHaveCount(0)
+	const dialog = page.locator('.share-dialog')
+	const row = dialog.locator('.share-dialog__row').filter({hasText: reader.username})
+	await expect(row).toContainText('You')
+	await expect(dialog.getByRole('combobox', {name: 'Search for people or teams'})).toHaveCount(0)
+	await expect(dialog.getByRole('button', {name: /^Remove/})).toHaveCount(0)
+	await expect(row.getByRole('combobox')).toHaveCount(0)
 })

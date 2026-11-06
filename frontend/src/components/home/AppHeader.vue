@@ -53,6 +53,19 @@
 					</BaseButton>
 				</template>
 			</ProjectSettingsDropdown>
+
+			<!-- prime-tasks F5: one Share dialog for people and teams. Icon-only below tablet width. -->
+			<XButton
+				v-if="currentProject.id > 0"
+				v-cy="'projectShareButton'"
+				variant="secondary"
+				icon="share-alt"
+				class="is-small project-share-button"
+				:aria-label="$t('project.share.share')"
+				:to="{ name: 'project.settings.share', params: { projectId: currentProject.id } }"
+			>
+				<span class="project-share-button__label">{{ $t('project.share.share') }}</span>
+			</XButton>
 		</div>
 
 		<div
@@ -265,6 +278,34 @@ $user-dropdown-width-mobile: 5rem;
 
 	@media screen and (min-width: $tablet) {
 		font-size: 1.75rem;
+	}
+}
+
+.project-share-button {
+	flex-shrink: 0;
+	margin-inline-start: var(--yy-space-2);
+
+	// Below tablet width there are about 112px between the menu button and the navbar icons:
+	// an icon-only Share button and 36px title buttons fit there without covering the search button.
+	@media screen and (max-width: $tablet) {
+		inline-size: 36px;
+		block-size: 36px;
+		padding: 0;
+		margin-inline-start: 0;
+
+		.project-share-button__label {
+			display: none;
+		}
+
+		:deep(.icon) {
+			margin: 0 !important;
+		}
+	}
+}
+
+@media screen and (max-width: $tablet) {
+	.project-title-wrapper .project-title-button {
+		min-inline-size: 36px;
 	}
 }
 
