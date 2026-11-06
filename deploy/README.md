@@ -16,20 +16,26 @@ replace the site block in `Caddyfile` with `{$PRIME_DOMAIN} { tls internal ... }
 
 ```bash
 sudo mkdir -p /opt/prime-tasks && sudo chown "$USER" /opt/prime-tasks
-git clone -b prime https://github.com/twilighty-abhi/prime-tasks.git /opt/prime-tasks
-cd /opt/prime-tasks/deploy
+git clone https://github.com/twilighty-abhi/prime-tasks.git /opt/prime-tasks
+cd /opt/prime-tasks
+git checkout prime-v2.8.0      # the release tag to run (see PRIME.md, "Releases")
+cd deploy
 cp .env.example .env
-# fill in PRIME_DOMAIN, ACME_EMAIL (required), PRIME_TASKS_VERSION, and two `openssl rand -hex 32` values
+# fill in PRIME_DOMAIN, ACME_EMAIL (required), PRIME_TASKS_VERSION=2.8.0, and two `openssl rand -hex 32` values
 chmod 600 .env
-docker compose build         # until the first release; afterwards `docker compose pull` (see below)
+docker compose build --build-arg RELEASE_VERSION=prime-v2.8.0
 docker compose up -d
 docker compose logs -f prime-tasks   # wait for "HTTP server listening"
 ```
 
-**Image: build or pull.** The image comes from GHCR once a `prime-v*` tag has been released (see PRIME.md).
-Until the first release there is nothing to pull, so `docker compose build` builds it from this checkout.
-After it, set `PRIME_TASKS_VERSION` to the release (for example `2.7.1` for tag `prime-v2.7.1`) and use
-`docker compose pull` instead.
+**Image: build from a tag (for now).** GitHub Actions is unavailable on the fork, so `prime-release.yml` doesn't
+publish images to GHCR yet. Until it does, the VM builds the image itself from a release tag:
+`git checkout prime-v2.8.0 && docker compose build`. Building takes a while (it compiles the frontend and the API);
+`--build-arg RELEASE_VERSION=<tag>` makes the app report the right version, as the release workflow does.
+
+**Image: pull (once releases publish to GHCR).** When `prime-release.yml` has pushed the tag's image to
+`ghcr.io/twilighty-abhi/prime-tasks` (see PRIME.md, "When Actions is back"), set `PRIME_TASKS_VERSION` to the
+release (for example `2.8.0` for tag `prime-v2.8.0`) and use `docker compose pull` instead of building.
 
 ### Accounts, teams and sharing (no license needed)
 
@@ -113,11 +119,23 @@ After any migration: check that people can log in, open a few projects with atta
 
 1. Read PRIME.md for the new `prime-v*` tag and any config flag changes.
 2. Back up: `./backup.sh`.
-3. Set `PRIME_TASKS_VERSION` in `.env` to the new tag (without the `prime-v` prefix), then:
+3. Set `PRIME_TASKS_VERSION` in `.env` to the new tag (without the `prime-v` prefix), then, until releases publish
+   to GHCR, build from the tag:
 
 ```bash
-cd /opt/prime-tasks/deploy
-git pull                       # picks up changes to config.yml, Caddyfile, compose
+cd /opt/prime-tasks
+git fetch --tags
+git checkout prime-vX.Y.Z      # the new release tag; also picks up config.yml, Caddyfile and compose changes
+cd deploy
+docker compose build --build-arg RELEASE_VERSION=prime-vX.Y.Z
+docker compose up -d
+docker compose logs -f prime-tasks   # migrations run here
+```
+
+   Once releases publish to GHCR, pull instead of building:
+
+```bash
+cd /opt/prime-tasks && git fetch --tags && git checkout prime-vX.Y.Z && cd deploy
 docker compose pull
 docker compose up -d
 docker compose logs -f prime-tasks   # migrations run here

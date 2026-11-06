@@ -54,7 +54,8 @@ git push origin prime
 git tag -a prime-vX.Y.Z -m "prime-tasks on Vikunja vX.Y.Z" && git push origin prime-vX.Y.Z
 ```
 
-The `prime-v*` tag triggers `.github/workflows/prime-release.yml`, which pushes
+While Actions is unavailable, build and check the image locally instead (see [Releases](#releases)). Normally the
+`prime-v*` tag triggers `.github/workflows/prime-release.yml`, which pushes
 `ghcr.io/twilighty-abhi/prime-tasks:X.Y.Z` and `:latest`.
 
 Upstream workflow files stay in the tree unchanged, so merges don't conflict. The upstream-only ones are disabled
@@ -82,6 +83,33 @@ GitHub only lists a workflow (and only lets you disable it) after something has 
 | `issue-closed-comment.yml` | issue closed | never registered | upstream issue bot |
 
 If an upstream merge adds a workflow, add it to this table and decide whether it needs disabling.
+
+## Releases
+
+GitHub Actions is unavailable on the fork, so `prime-release.yml` hasn't run for these tags and nothing is on GHCR
+yet. Each release was checked by building the image locally from the tag with
+`DOCKER_DEFAULT_PLATFORM=linux/amd64 docker compose build --build-arg RELEASE_VERSION=<tag>` (amd64, as the release
+workflow builds; the pinned `xgo` build image has no arm64 variant), starting the full compose stack with
+`PRIME_DOMAIN=localhost`, and checking that `/api/v1/info` reports the tag, the UI answers, and `POST /api/v2/mcp`
+lists tools for a token with every permission. The digest is the local image ID (`docker image inspect --format
+'{{.Id}}'`); a registry digest only exists once `prime-release.yml` pushes the image.
+
+| Tag | Commit | Upstream base | What's in it | Local image (linux/amd64) | Checked |
+|---|---|---|---|---|---|
+| `prime-v2.7.1` | `8e2931beb` | v2.7.1 | Phase 1: F1–F6, F9, Y1, deploy D1, local CI (#1–#12, #14, #15) | `sha256:ffc6675fca74cc3e0b77c536ad60d0c61d590d2a3fb3f77f2f927cee80825a43` (54 MB) | 2026-11-07: version `prime-v2.7.1`, UI 200, MCP 27 tools |
+PENDING_280_ROW
+
+The VM builds from a tag until releases publish to GHCR (deploy/README.md, "Image: build from a tag").
+
+### When Actions is back
+
+- [ ] Check that jobs start again: `gh run list -R twilighty-abhi/prime-tasks --limit 3` shows no "account is locked due to a billing issue".
+- [ ] Re-run prime-ci on `prime`: `gh workflow run prime-ci.yml -R twilighty-abhi/prime-tasks --ref prime` (or push the next commit to `prime`), and wait for it to finish.
+- [ ] Push both tags again to trigger prime-release (a tag push only triggers once, and Actions was locked when they were pushed):
+  `git push origin :refs/tags/prime-v2.7.1 && git push origin prime-v2.7.1`, then the same for `prime-v2.8.0`. Check that `ghcr.io/twilighty-abhi/prime-tasks:2.7.1`, `:2.8.0` and `:latest` exist (`:latest` must end up on 2.8.0, so push 2.8.0 last).
+- [ ] Disable `dependency-diff.yml` once it shows up under Actions: `gh workflow disable dependency-diff.yml -R twilighty-abhi/prime-tasks`.
+- [ ] Compare CI with the local runs: every job that `scripts/local-ci.sh` mirrors should pass on the commits above (the local summaries are PR comments on #8 and #13). Note any difference here. Expect CI to also run what local CI skips (MySQL/MariaDB/ParadeDB, migration smoke, S3, veans), and the macOS-only `menu.spec.ts:19` to pass on Linux.
+- [ ] Update deploy/README.md to `docker compose pull` as the default, and this section's table with the GHCR digests.
 
 ## Building and running on abhi-t4gc (dev laptop, Windows 11)
 
