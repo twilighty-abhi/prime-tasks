@@ -470,7 +470,12 @@
       "title": "Leave \"{project}\"",
       "header": "Leave this project",
       "text": "You will lose access to \"{project}\" and the projects under it, unless a team or another share still gives you access. To get back in, a project admin has to share it with you again.",
-      "success": "You left the project."
+      "success": "You left the project.",
+      "blockedHeader": "You can't leave this project yourself",
+      "teamOnly": "Your access comes from the team {team}. Leave the team or ask a team admin to remove you.",
+      "openTeam": "Open {team}",
+      "parentOnly": "Your access comes from the parent project {project}. Leave that project instead.",
+      "openParent": "Open {project}"
     },
     "duplicate": {
       "title": "Duplicate this project",
