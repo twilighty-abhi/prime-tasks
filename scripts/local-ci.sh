@@ -181,6 +181,9 @@ echo "local-ci on $SHA ($(git branch --show-current)), logs in $OUT"
 echo "pnpm $(pnpm -v), go $(go env GOVERSION), golangci-lint $(golangci-lint version --short 2>/dev/null || golangci-lint --version | awk '{print $4}')"
 
 # --- build ----------------------------------------------------------------------------------
+# CI starts from a fresh checkout. A stale vitest/vite transform cache here once served old
+# locale messages and failed new i18n strings, so start the frontend without one.
+rm -rf frontend/node_modules/.vitest-cache frontend/node_modules/.vite
 step frontend-install -               bash -c 'cd frontend && pnpm install --frozen-lockfile'
 step frontend-build -                 bash -c 'cd frontend && pnpm build'
 step api-build -                      go tool mage build

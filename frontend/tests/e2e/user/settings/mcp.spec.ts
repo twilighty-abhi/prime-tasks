@@ -8,8 +8,10 @@ test('creates a scoped MCP token and shows connection instructions once', async 
 	await expect(page.getByLabel('Which client do you use?')).toHaveCount(0)
 	const endpoint = await page.getByLabel('MCP endpoint').inputValue()
 	await page.getByRole('button', {name: 'Create a token'}).click()
-	await expect(page.getByRole('checkbox', {name: /access$/})).toBeChecked()
-	await expect(page.getByRole('checkbox', {name: /access$/})).toBeDisabled()
+	// prime-tasks A3: projects.access (the F5 access list) is a second "access" permission; mcp.access is the locked one.
+	const mcpAccess = page.getByRole('checkbox', {name: /access$/, disabled: true})
+	await expect(mcpAccess).toHaveCount(1)
+	await expect(mcpAccess).toBeChecked()
 	const created = page.waitForResponse(r => r.url().endsWith('/tokens') && r.request().method() === 'POST')
 	await page.getByRole('button', {name: 'Create token', exact: true}).click()
 	const response = await created
