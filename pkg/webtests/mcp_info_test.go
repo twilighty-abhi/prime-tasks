@@ -78,10 +78,11 @@ func TestMCPInfo(t *testing.T) {
 				assert.ElementsMatch(t, crud, typed[group], group)
 			}
 			assert.ElementsMatch(t, []string{"create", "delete", "read_all"}, typed["tasks_assignees"])
-			assert.Contains(t, typed["other"], "users")
-			for _, permission := range typed["other"] {
+			// prime-tasks A4: my_work is a typed tool in the other group, next to users.
+			assert.ElementsMatch(t, []string{"my_work", "users"}, typed["other"])
+			for permission, path := range map[string]string{"users": "/api/v2/users", "my_work": "/api/v2/my-work"} {
 				token := &models.APIToken{APIPermissions: models.APIPermissions{"other": {permission}}}
-				assert.True(t, token.CanUseRoute("/api/v2/users", http.MethodGet), permission)
+				assert.True(t, token.CanUseRoute(path, http.MethodGet), permission)
 			}
 		})
 	}

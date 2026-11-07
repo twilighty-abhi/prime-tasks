@@ -130,3 +130,14 @@ func TestExposure_PrimeRoutes(t *testing.T) {
 	assert.False(t, ok, "leaving a project must stay off MCP")
 	assert.NotContains(t, ExposedToolNames(), "project_shares_leave")
 }
+
+// prime-tasks A4: my_work is a typed tool.
+func TestExposure_MyWork(t *testing.T) {
+	typed, ok := exposure("my-work", &huma.Operation{
+		OperationID: "my-work",
+		Method:      http.MethodGet,
+	})
+	assert.True(t, ok)
+	assert.True(t, typed)
+	assert.Contains(t, ExposedToolNames(), "my_work")
+}
