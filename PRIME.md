@@ -221,6 +221,8 @@ doesn't fail the e2e step for it; any other failure does.
 
 The script runs everything with `TZ=UTC`, as CI does: the e2e time-entry factory writes local time as a naive
 datetime that the API reads as UTC, so in IST the time-tracking tests fail after 18:30.
+It also deletes the frontend's vitest/vite caches first, as a fresh CI checkout has none: a stale cache
+in the main checkout once served old locale messages and failed tests for new strings.
 
 Differences from CI: Dex's issuer is `http://127.0.0.1:5556` instead of `http://dex:5556` (same config otherwise;
 the Mac can't resolve `dex`), and the Dex image runs under amd64 emulation. Playwright runs serially
