@@ -1188,6 +1188,7 @@
       "created": "Created {0} by {1}",
       "updated": "Updated {0}",
       "doneAt": "Done {0}",
+      "claimedBy": "Claimed by {bot} until {until}",
       "titleRequired": "The task title can't be empty.",
       "updateSuccess": "The task was saved successfully.",
       "deleteSuccess": "The task has been moved to the trash.",

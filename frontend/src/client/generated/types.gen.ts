@@ -1255,6 +1255,10 @@ export type MyWorkTask = {
      */
     readonly buckets?: Array<Bucket> | null;
     /**
+     * The live claim a bot holds on this task, if any. Read-only; use the claim and release endpoints to change it.
+     */
+    readonly claim?: TaskClaim;
+    /**
      * The number of comments on this task. Only present when requested via the comment_count expand option.
      */
     readonly comment_count?: number;
@@ -2558,6 +2562,10 @@ export type Task = {
      */
     readonly buckets?: Array<Bucket> | null;
     /**
+     * The live claim a bot holds on this task, if any. Read-only; use the claim and release endpoints to change it.
+     */
+    readonly claim?: TaskClaim;
+    /**
      * The number of comments on this task. Only present when requested via the comment_count expand option.
      */
     readonly comment_count?: number;
@@ -2743,6 +2751,33 @@ export type TaskBucket = {
     task_id?: number;
 };
 
+export type TaskClaim = {
+    /**
+     * A URL to the JSON Schema for this object.
+     */
+    readonly $schema?: string;
+    /**
+     * The bot user holding the claim.
+     */
+    readonly bot?: User;
+    /**
+     * The id of the bot user holding the claim.
+     */
+    readonly bot_id?: number;
+    /**
+     * When the bot claimed the task. Renewing keeps this value.
+     */
+    readonly claimed_at?: string;
+    /**
+     * When the claim lapses unless the bot claims the task again. After this, another bot may claim it.
+     */
+    readonly expires_at?: string;
+    /**
+     * The claimed task.
+     */
+    readonly task_id?: number;
+};
+
 export type TaskCollection = {
     /**
      * The filter query to match tasks by, e.g. "done = false && due_date < now+7d". Combine conditions with && or || (not and/or) and group them with parentheses. Operators: =, !=, >, >=, <, <=, like, in, not in. See https://vikunja.io/docs/filters.
@@ -2899,6 +2934,10 @@ export type TaskReadOneBody = {
      */
     readonly buckets?: Array<Bucket> | null;
     /**
+     * The live claim a bot holds on this task, if any. Read-only; use the claim and release endpoints to change it.
+     */
+    readonly claim?: TaskClaim;
+    /**
      * The number of comments on this task. Only present when requested via the comment_count expand option.
      */
     readonly comment_count?: number;
@@ -3048,6 +3087,21 @@ export type TaskRelation = {
      * The id of the base task. Set from the URL path; ignored in the request body.
      */
     readonly task_id?: number;
+};
+
+export type TaskReleaseBody = {
+    /**
+     * A URL to the JSON Schema for this object.
+     */
+    readonly $schema?: string;
+    /**
+     * Optional kanban bucket to move the task into, e.g. Review. Must belong to a view of the task's project.
+     */
+    bucket_id?: number;
+    /**
+     * Optional outcome to post as a task comment, as the caller.
+     */
+    comment?: string;
 };
 
 export type TaskReminder = {
@@ -3641,6 +3695,10 @@ export type TrashedTask = {
      * Whether the requesting user may permanently delete this task, which needs admin access to its project. Write access is enough to see and restore it.
      */
     readonly can_delete_permanently?: boolean;
+    /**
+     * The live claim a bot holds on this task, if any. Read-only; use the claim and release endpoints to change it.
+     */
+    readonly claim?: TaskClaim;
     /**
      * The number of comments on this task. Only present when requested via the comment_count expand option.
      */
@@ -5511,6 +5569,10 @@ export type TaskBucketWritable = {
     task_id?: number;
 };
 
+export type TaskClaimWritable = {
+    [key: string]: never;
+};
+
 export type TaskCommentWritable = {
     /**
      * The comment text. May contain HTML; mentions are parsed and notify the mentioned users.
@@ -5595,6 +5657,17 @@ export type TaskRelationWritable = {
      * The kind of relation, describing the direction from the base task to the other task (e.g. subtask, blocking, related). The inverse relation is created automatically.
      */
     relation_kind?: 'subtask' | 'parenttask' | 'related' | 'duplicateof' | 'duplicates' | 'blocking' | 'blocked' | 'precedes' | 'follows' | 'copiedfrom' | 'copiedto';
+};
+
+export type TaskReleaseBodyWritable = {
+    /**
+     * Optional kanban bucket to move the task into, e.g. Review. Must belong to a view of the task's project.
+     */
+    bucket_id?: number;
+    /**
+     * Optional outcome to post as a task comment, as the caller.
+     */
+    comment?: string;
 };
 
 export type TaskShareAndAssignWritable = {
@@ -10876,6 +10949,36 @@ export type TaskAttachmentsPreviewResponses = {
 
 export type TaskAttachmentsPreviewResponse = TaskAttachmentsPreviewResponses[keyof TaskAttachmentsPreviewResponses];
 
+export type ClaimTaskData = {
+    body?: never;
+    path: {
+        /**
+         * The numeric id of the task to claim.
+         */
+        task: number;
+    };
+    query?: never;
+    url: '/tasks/{task}/claim';
+};
+
+export type ClaimTaskErrors = {
+    /**
+     * Error
+     */
+    default: VikunjaErrorModel;
+};
+
+export type ClaimTaskError = ClaimTaskErrors[keyof ClaimTaskErrors];
+
+export type ClaimTaskResponses = {
+    /**
+     * OK
+     */
+    200: TaskClaim;
+};
+
+export type ClaimTaskResponse = ClaimTaskResponses[keyof ClaimTaskResponses];
+
 export type TaskCommentsListData = {
     body?: never;
     path: {
@@ -11408,6 +11511,41 @@ export type TasksRelationsDeleteResponses = {
 };
 
 export type TasksRelationsDeleteResponse = TasksRelationsDeleteResponses[keyof TasksRelationsDeleteResponses];
+
+export type ReleaseTaskData = {
+    body?: TaskReleaseBodyWritable;
+    path: {
+        /**
+         * The numeric id of the task to release.
+         */
+        task: number;
+    };
+    query?: {
+        /**
+         * How rich-text fields are exchanged. See the API description.
+         */
+        format?: 'html' | 'markdown';
+    };
+    url: '/tasks/{task}/release';
+};
+
+export type ReleaseTaskErrors = {
+    /**
+     * Error
+     */
+    default: VikunjaErrorModel;
+};
+
+export type ReleaseTaskError = ReleaseTaskErrors[keyof ReleaseTaskErrors];
+
+export type ReleaseTaskResponses = {
+    /**
+     * OK
+     */
+    200: TaskClaim;
+};
+
+export type ReleaseTaskResponse = ReleaseTaskResponses[keyof ReleaseTaskResponses];
 
 export type TasksRestoreData = {
     body?: never;

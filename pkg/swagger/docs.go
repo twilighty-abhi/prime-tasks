@@ -10299,6 +10299,9 @@ const docTemplate = `{
                         "$ref": "#/definitions/models.Bucket"
                     }
                 },
+                "claim": {
+                    "$ref": "#/definitions/models.TaskClaim"
+                },
                 "comment_count": {
                     "description": "Comment count of this task. Only present when fetching tasks with the ` + "`" + `expand` + "`" + ` parameter set to ` + "`" + `comment_count` + "`" + `.",
                     "type": "integer"
@@ -10522,6 +10525,26 @@ const docTemplate = `{
                 },
                 "task_id": {
                     "description": "The task which belongs to the bucket. Together with ProjectViewID\nthis field is part of a unique index to prevent duplicates.",
+                    "type": "integer"
+                }
+            }
+        },
+        "models.TaskClaim": {
+            "type": "object",
+            "properties": {
+                "bot": {
+                    "$ref": "#/definitions/user.User"
+                },
+                "bot_id": {
+                    "type": "integer"
+                },
+                "claimed_at": {
+                    "type": "string"
+                },
+                "expires_at": {
+                    "type": "string"
+                },
+                "task_id": {
                     "type": "integer"
                 }
             }

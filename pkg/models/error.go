@@ -3373,3 +3373,98 @@ func (err ErrUserDataExportDoesNotExist) HTTPError() web.HTTPError {
 		Message:  "No user data export found.",
 	}
 }
+
+// ===========
+// Task claims
+// ===========
+
+// Fork-only codes (49xx) so they don't collide with upstream's next task codes.
+
+// ErrTaskClaimedByOtherBot is returned when a bot claims or releases a task another bot holds a live claim on.
+type ErrTaskClaimedByOtherBot struct {
+	TaskID      int64     `json:"task_id"`
+	BotID       int64     `json:"bot_id"`
+	BotUsername string    `json:"bot_username"`
+	ExpiresAt   time.Time `json:"expires_at"`
+}
+
+// IsErrTaskClaimedByOtherBot checks if an error is ErrTaskClaimedByOtherBot.
+func IsErrTaskClaimedByOtherBot(err error) bool {
+	_, ok := err.(ErrTaskClaimedByOtherBot)
+	return ok
+}
+
+func (err ErrTaskClaimedByOtherBot) Error() string {
+	return fmt.Sprintf("Task is claimed by another bot [TaskID: %d, BotID: %d, ExpiresAt: %s]", err.TaskID, err.BotID, err.ExpiresAt)
+}
+
+// ErrCodeTaskClaimedByOtherBot holds the unique world-error code of this error
+const ErrCodeTaskClaimedByOtherBot = 4901
+
+// HTTPError holds the http error description
+func (err ErrTaskClaimedByOtherBot) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusConflict,
+		Code:     ErrCodeTaskClaimedByOtherBot,
+		Message:  "This task is claimed by " + err.BotUsername + " until " + err.ExpiresAt.UTC().Format(time.RFC3339) + ".",
+		Details:  err,
+		I18nParams: map[string]string{
+			"bot":     err.BotUsername,
+			"expires": err.ExpiresAt.UTC().Format(time.RFC3339),
+		},
+	}
+}
+
+// ErrOnlyBotsCanClaimTasks is returned when anything but a bot user tries to claim a task.
+type ErrOnlyBotsCanClaimTasks struct {
+	TaskID int64
+}
+
+// IsErrOnlyBotsCanClaimTasks checks if an error is ErrOnlyBotsCanClaimTasks.
+func IsErrOnlyBotsCanClaimTasks(err error) bool {
+	_, ok := err.(ErrOnlyBotsCanClaimTasks)
+	return ok
+}
+
+func (err ErrOnlyBotsCanClaimTasks) Error() string {
+	return fmt.Sprintf("Only bot users can claim tasks [TaskID: %d]", err.TaskID)
+}
+
+// ErrCodeOnlyBotsCanClaimTasks holds the unique world-error code of this error
+const ErrCodeOnlyBotsCanClaimTasks = 4902
+
+// HTTPError holds the http error description
+func (err ErrOnlyBotsCanClaimTasks) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusForbidden,
+		Code:     ErrCodeOnlyBotsCanClaimTasks,
+		Message:  "Only bot users can claim tasks. People assign the task to themselves instead.",
+	}
+}
+
+// ErrTaskIsNotClaimed is returned when releasing a task without a claim the caller could release.
+type ErrTaskIsNotClaimed struct {
+	TaskID int64
+}
+
+// IsErrTaskIsNotClaimed checks if an error is ErrTaskIsNotClaimed.
+func IsErrTaskIsNotClaimed(err error) bool {
+	_, ok := err.(ErrTaskIsNotClaimed)
+	return ok
+}
+
+func (err ErrTaskIsNotClaimed) Error() string {
+	return fmt.Sprintf("Task is not claimed [TaskID: %d]", err.TaskID)
+}
+
+// ErrCodeTaskIsNotClaimed holds the unique world-error code of this error
+const ErrCodeTaskIsNotClaimed = 4903
+
+// HTTPError holds the http error description
+func (err ErrTaskIsNotClaimed) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusConflict,
+		Code:     ErrCodeTaskIsNotClaimed,
+		Message:  "This task is not claimed.",
+	}
+}
