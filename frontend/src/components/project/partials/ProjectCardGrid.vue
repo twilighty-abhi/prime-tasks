@@ -39,13 +39,13 @@ const filteredProjects = computed(() => {
 
 <style lang="scss" scoped>
 .project-grid {
-	--project-grid-item-height: 150px;
+	--project-grid-item-height: 140px; // prime-tasks: Yuyu cards (band, tile, title); rows grow for two-line titles
 	--project-grid-gap: 1rem;
 	margin: 0; // reset li
 	list-style-type: none;
 	display: grid;
 	grid-template-columns: repeat(var(--project-grid-columns), 1fr);
-	grid-auto-rows: var(--project-grid-item-height);
+	grid-auto-rows: minmax(var(--project-grid-item-height), auto);
 	gap: var(--project-grid-gap);
 
 	@media screen and (min-width: $mobile) {

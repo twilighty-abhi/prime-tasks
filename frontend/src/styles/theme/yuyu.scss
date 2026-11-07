@@ -358,17 +358,8 @@ body {
     border-radius: var(--yy-radius-lg);
   }
 
-  // clickable project cards on the home page and project overview
-  .project-card {
-    border: 1px solid var(--yy-border);
-    border-radius: var(--yy-radius-lg);
-    box-shadow: none;
-    transition: background-color var(--yy-duration-hover) var(--yy-ease);
-
-    &:not(.has-background):hover {
-      background-color: var(--yy-bg-subtle);
-    }
-  }
+  // Project cards on the home page and the projects page style themselves as Yuyu event cards
+  // (components/project/partials/ProjectCard.vue).
 }
 
 // ---------------------------------------------------------------------------
