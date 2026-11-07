@@ -1438,6 +1438,7 @@
   "team": {
     "title": "Teams",
     "noTeams": "You are currently not part of any teams.",
+    "memberCount": "{count} member | {count} members",
     "create": {
       "title": "Create a team",
       "success": "The team was successfully created."
