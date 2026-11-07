@@ -45,12 +45,12 @@ HTMLElement.prototype.hidePopover = function hidePopover(this: HTMLElement) {
 
 // happy-dom does not know :popover-open either.
 const nativeMatches = HTMLElement.prototype.matches
-HTMLElement.prototype.matches = function matches(this: HTMLElement, selector: string) {
+HTMLElement.prototype.matches = function matches(this: HTMLElement, selector: string): boolean {
 	if (selector === ':popover-open') {
 		return this.hasAttribute(POPOVER_OPEN)
 	}
 	return nativeMatches.call(this, selector)
-}
+} as typeof HTMLElement.prototype.matches
 
 // What the browser does on an outside click or Escape.
 function lightDismiss(element: HTMLElement) {
