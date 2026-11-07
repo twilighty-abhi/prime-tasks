@@ -106,6 +106,9 @@ func (mw *MyWork) ReadAll(s *xorm.Session, a web.Auth, _ string, page int, perPa
 	if err = addMoreInfoToTasks(s, taskMap, a, nil, nil); err != nil {
 		return nil, 0, 0, err
 	}
+	if err = addViewBucketsToTasks(s, a, taskMap); err != nil {
+		return nil, 0, 0, err
+	}
 	projects, err := GetProjectsMapByIDs(s, projectIDs)
 	if err != nil {
 		return nil, 0, 0, err

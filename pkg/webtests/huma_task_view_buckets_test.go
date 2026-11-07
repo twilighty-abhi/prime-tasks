@@ -22,6 +22,8 @@ import (
 	"testing"
 
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/models"
+	"code.vikunja.io/api/pkg/user"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -76,7 +78,15 @@ func TestHumaTask_ViewBuckets(t *testing.T) {
 	t.Run("my-work items carry their bucket", func(t *testing.T) {
 		e, err := setupTestEnv()
 		require.NoError(t, err)
-		setupMyWork(t)
+		d := setupMyWork(t)
+		// The my-work projects are created without views; give them a Kanban view, which files their tasks into a bucket.
+		s := db.NewSession()
+		for _, projectID := range []int64{d.shared, d.private} {
+			view := &models.ProjectView{ProjectID: projectID, Title: "Kanban", ViewKind: models.ProjectViewKindKanban, BucketConfigurationMode: models.BucketConfigurationModeManual}
+			require.NoError(t, view.Create(s, &user.User{ID: myWorkOwnerID}))
+		}
+		require.NoError(t, s.Commit())
+		s.Close()
 		rec := humaRequest(t, e, http.MethodGet, "/api/v2/my-work", "", myWorkToken(t, myWorkOwnerID, map[string][]string{"other": {"my_work"}}), "")
 		require.Equal(t, http.StatusOK, rec.Code, "body: %s", rec.Body.String())
 		var page struct {

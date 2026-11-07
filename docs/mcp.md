@@ -226,7 +226,7 @@ Permissions: `0` read only, `1` read & write, `2` admin. Only project admins may
 
 | Tool | Tier | Safe | What | Example |
 |---|---|---|---|---|
-| `my_work` | T | safe | Your open tasks across all projects, by due date then priority (A4). For a bot: its owner's tasks, in projects the bot can read | `{"fields": ["id", "title", "project", "due_date", "url"]}` |
+| `my_work` | T | safe | Your open tasks across all projects, by due date then priority (A4). For a bot: its owner's tasks, in projects the bot can read. Each task has `view_buckets` (`project_view_id`, `bucket_id`, `bucket_title` per Kanban view), as does the single task read | `{"fields": ["id", "title", "project", "due_date", "url"]}` |
 | `claim_task` | T | safe | Claim a task for the calling bot for 2 hours; adds the "agent: working" label and a pickup comment (A5) | `{"task": 42}` |
 | `release_task` | T | safe | Release a claim, with an optional outcome comment and bucket move (A5) | `{"task": 42, "comment": "Done, PR #123 is ready for review.", "bucket_id": 14, "format": "markdown"}` |
 | `task_assignees_share_and_assign` | C | | Assign a user, sharing the project with them (read & write) first if needed; project admins only (F2, A3) | `{"action": "task_assignees_share_and_assign", "arguments": {"task": 42, "user_id": 3}}` |
