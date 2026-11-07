@@ -68,6 +68,9 @@ func TestMCPConnectionInfo(t *testing.T) {
 	assert.Equal(t, http.MethodPatch, info.Routes["tasks"]["update"].Method)
 	assert.Equal(t, map[string][]string{"*": {"read_one", "read_all"}}, info.Presets.ReadOnly)
 	assert.Equal(t, map[string]string{"*": "*"}, info.Presets.Full)
+	// prime-tasks A2: the agent preset is the shared definition the bot CLI issues too.
+	assert.Equal(t, models.AgentSafeAPIPermissions(), info.Presets.AgentSafe)
+	assert.Contains(t, info.Presets.AgentSafe["tasks"], "update")
 }
 
 func TestMCPConnectionInfoAllowlist(t *testing.T) {

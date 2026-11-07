@@ -62,6 +62,8 @@ func (m *Module) ConnectionInfo() apiv2.ConnectionSettings {
 			ReadOnly: map[string][]string{"*": {"read_one", "read_all"}},
 			Typed:    typed,
 			Full:     map[string]string{"*": "*"},
+			// prime-tasks A2
+			AgentSafe: models.AgentSafeAPIPermissions(),
 		},
 	}
 }

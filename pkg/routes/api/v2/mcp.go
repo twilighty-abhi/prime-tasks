@@ -38,6 +38,8 @@ type TokenPresets struct {
 	ReadOnly map[string][]string   `json:"read_only" doc:"Wildcard permissions expanded against routes."`
 	Typed    models.APIPermissions `json:"typed" doc:"Exact permissions used by the first-class tools."`
 	Full     map[string]string     `json:"full" doc:"Wildcard granting all advertised permissions."`
+	// prime-tasks A2
+	AgentSafe models.APIPermissions `json:"agent_safe" doc:"Exact permissions of the Agent (safe) preset: read, create and update on tasks, comments, labels, assignees and task labels, the reads needed to find projects, views and buckets, my_work, and claim and release. No delete and no share management."`
 }
 
 // RegisterMCPInfo is called explicitly instead of through AddRouteRegistrar: settings are derived

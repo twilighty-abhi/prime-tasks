@@ -3454,6 +3454,12 @@ export type Token = {
 
 export type TokenPresets = {
     /**
+     * Exact permissions of the Agent (safe) preset: read, create and update on tasks, comments, labels, assignees and task labels, the reads needed to find projects, views and buckets, my_work, and claim and release. No delete and no share management.
+     */
+    agent_safe?: {
+        [key: string]: Array<string> | null;
+    };
+    /**
      * Wildcard granting all advertised permissions.
      */
     full?: {
