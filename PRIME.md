@@ -104,7 +104,8 @@ lists tools for a token with every permission. The digest is the local image ID 
 | Tag | Commit | Upstream base | What's in it | Local image (linux/amd64) | Checked |
 |---|---|---|---|---|---|
 | `prime-v2.7.1` | `8e2931beb` | v2.7.1 | Phase 1: F1–F6, F9, Y1, deploy D1, local CI (#1–#12, #14, #15) | `sha256:ffc6675fca74cc3e0b77c536ad60d0c61d590d2a3fb3f77f2f927cee80825a43` (54 MB) | 2026-11-07: version `prime-v2.7.1`, UI 200, MCP 27 tools |
-PENDING_280_ROW
+| `prime-v2.8.0` | `9682894b8` | v2.8.0 | Upstream v2.8.0 on top of Phase 1 (#13, #16) | `sha256:9c70e1a8a5a86c120533eaf8532354a0d4c2980b5468d300f62a39054aa134a3` (178 MB) | 2026-11-07: version `prime-v2.8.0`, UI 200, CLI user logs in, MCP 27 tools |
+| `prime-v2.8.0-p2` | `439988392` | v2.8.0 | Phase 2: G1 Google sign-in, F7 usernames, A1 agent bots, A2 Agent (safe) preset, A3 MCP sharing, A4 my_work, A5 claims (#17–#23) | `sha256:c8ce0f614db0f13531278a08dbb90879b745366939d065584d15993a49ec9bee` (54 MB) | 2026-11-07: version `prime-v2.8.0-p2`, UI 200, Google provider listed with the local form folded, CLI user logs in, MCP 30 tools (Agent (safe) bot via `new-agent-bot.sh --docker`: 23) |
 
 The VM builds from a tag until releases publish to GHCR (deploy/README.md, "Image: build from a tag").
 
