@@ -361,6 +361,7 @@
         "chooseClient": "Choose a client",
         "clientHelp": "{client} setup guide",
         "typedPreset": "Typed tools read + write",
+        "agentSafePreset": "Agent (safe)",
         "clients": {
           "claudeCode": {
             "command": "Run this command in a terminal: {value}",
