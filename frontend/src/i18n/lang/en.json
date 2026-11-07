@@ -78,6 +78,8 @@
       "login": "Login",
       "createAccount": "Create account",
       "loginWith": "Log in with {provider}",
+      "signInWith": "Sign in with {provider}",
+      "otherWaysToSignIn": "Other ways to sign in",
       "authenticating": "Authenticating…",
       "openIdStateError": "State does not match, refusing to continue!",
       "openIdGeneralError": "An error occurred while authenticating against the third party.",
