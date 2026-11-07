@@ -163,3 +163,29 @@ func TestMCP_Catalog_EveryExposedOperationIsReachable(t *testing.T) {
 	}
 	assert.ElementsMatch(t, mcp.ExposedToolNames(), reachable)
 }
+
+// prime-tasks A3: share-and-assign (F2) and the access list (F5) are catalog actions whose descriptions say who may
+// call them; leaving a project (F4) stays off MCP.
+func TestMCP_Catalog_PrimeSharingActions(t *testing.T) {
+	c := newAllScopesMCPClient(t)
+	descriptions := map[string]string{}
+	for _, a := range findActions(t, c, map[string]any{}) {
+		descriptions[a["name"].(string)] = a["description"].(string)
+	}
+	require.Contains(t, descriptions, "task_assignees_share_and_assign")
+	assert.Contains(t, descriptions["task_assignees_share_and_assign"], "Requires admin permission on the task's project")
+	require.Contains(t, descriptions, "project_access_list")
+	assert.Contains(t, descriptions["project_access_list"], "Any user who can read the project")
+	assert.NotContains(t, descriptions, "project_shares_leave")
+	assert.NotContains(t, c.toolNames(), "project_shares_leave")
+
+	var env struct {
+		Items []map[string]any `json:"items"`
+	}
+	toolResultJSON(t, c.callTool("do_action", map[string]any{
+		"action":    "project_access_list",
+		"arguments": map[string]any{"project": 1},
+	}), &env)
+	require.NotEmpty(t, env.Items)
+	assert.Equal(t, "owner", env.Items[0]["source"])
+}
