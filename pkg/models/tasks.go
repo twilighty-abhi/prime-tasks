@@ -196,7 +196,9 @@ type Task struct {
 	CreatedByID int64      `xorm:"bigint not null" json:"-"` // ID of the user who put that task on the project
 
 	// Null for tasks soft-deleted before this was tracked.
-	DeletedBy   *user.User `xorm:"-" json:"deleted_by,omitempty" readOnly:"true" doc:"The user who moved this task to the trash. Only present on soft-deleted tasks, and absent there for tasks deleted before this was recorded."`
+	DeletedBy *user.User `xorm:"-" json:"deleted_by,omitempty" readOnly:"true" doc:"The user who moved this task to the trash. Only present on soft-deleted tasks, and absent there for tasks deleted before this was recorded."`
+
+	Claim       *TaskClaim `xorm:"-" json:"claim,omitempty" readOnly:"true" doc:"The live claim a bot holds on this task, if any. Read-only; use the claim and release endpoints to change it."`
 	DeletedByID int64      `xorm:"bigint null 'deleted_by_id'" json:"-"`
 
 	web.CRUDable    `xorm:"-" json:"-"`
@@ -821,6 +823,11 @@ func addMoreInfoToTasks(s *xorm.Session, taskMap map[int64]*Task, a web.Auth, vi
 	}
 
 	err = addAttachmentsToTasks(s, taskIDs, taskMap)
+	if err != nil {
+		return
+	}
+
+	err = addClaimsToTasks(s, taskIDs, taskMap)
 	if err != nil {
 		return
 	}

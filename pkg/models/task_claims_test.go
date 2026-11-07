@@ -99,11 +99,11 @@ func releaseTaskForTest(t *testing.T, release *TaskClaim, a web.Auth) error {
 	return nil
 }
 
-func setClaimExpiryForTest(t *testing.T, taskID int64, expiresAt time.Time) {
+func setTask1ClaimExpiryForTest(t *testing.T, expiresAt time.Time) {
 	t.Helper()
 	s := db.NewAutocommitSession()
 	defer s.Close()
-	_, err := s.Table("task_claims").Where("task_id = ?", taskID).Update(map[string]any{"expires_at": expiresAt})
+	_, err := s.Table("task_claims").Where("task_id = ?", 1).Update(map[string]any{"expires_at": expiresAt})
 	require.NoError(t, err)
 }
 
@@ -165,7 +165,7 @@ func TestTaskClaim_Claim(t *testing.T) {
 		setupClaimTest(t)
 		first, err := claimTaskForTest(t, 1, claimBotA)
 		require.NoError(t, err)
-		setClaimExpiryForTest(t, 1, time.Now().Add(10*time.Minute))
+		setTask1ClaimExpiryForTest(t, time.Now().Add(10*time.Minute))
 
 		renewed, err := claimTaskForTest(t, 1, claimBotA)
 		require.NoError(t, err)
@@ -200,7 +200,7 @@ func TestTaskClaim_Claim(t *testing.T) {
 		setupClaimTest(t)
 		_, err := claimTaskForTest(t, 1, claimBotA)
 		require.NoError(t, err)
-		setClaimExpiryForTest(t, 1, time.Now().Add(-time.Minute))
+		setTask1ClaimExpiryForTest(t, time.Now().Add(-time.Minute))
 
 		claim, err := claimTaskForTest(t, 1, claimBotB)
 		require.NoError(t, err)
@@ -364,7 +364,7 @@ func TestTaskClaim_Release(t *testing.T) {
 		setupClaimTest(t)
 		_, err := claimTaskForTest(t, 1, claimBotA)
 		require.NoError(t, err)
-		setClaimExpiryForTest(t, 1, time.Now().Add(-time.Minute))
+		setTask1ClaimExpiryForTest(t, time.Now().Add(-time.Minute))
 
 		require.NoError(t, releaseTaskForTest(t, &TaskClaim{TaskID: 1}, claimOwner))
 		db.AssertMissing(t, "task_claims", map[string]any{"task_id": 1})
@@ -433,7 +433,7 @@ func TestTaskClaim_ShownOnTaskReads(t *testing.T) {
 		setupClaimTest(t)
 		_, err := claimTaskForTest(t, 1, claimBotA)
 		require.NoError(t, err)
-		setClaimExpiryForTest(t, 1, time.Now().Add(-time.Minute))
+		setTask1ClaimExpiryForTest(t, time.Now().Add(-time.Minute))
 
 		s := db.NewSession()
 		defer s.Close()
@@ -449,7 +449,7 @@ func TestTaskClaim_CleanupExpired(t *testing.T) {
 	require.NoError(t, err)
 	_, err = claimTaskForTest(t, 3, claimBotA)
 	require.NoError(t, err)
-	setClaimExpiryForTest(t, 1, time.Now().Add(-time.Minute))
+	setTask1ClaimExpiryForTest(t, time.Now().Add(-time.Minute))
 
 	require.NoError(t, cleanupExpiredTaskClaims(time.Now()))
 
