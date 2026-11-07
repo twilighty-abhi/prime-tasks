@@ -83,6 +83,11 @@
 				/>
 			</nav>
 
+			<TaskClaimNotice
+				v-if="task.claim"
+				:claim="task.claim"
+			/>
+
 			<ChecklistSummary :task="task" />
 
 			<!-- Content and buttons -->
@@ -704,6 +709,7 @@ import {TASK_REPEAT_MODES} from '@/types/IRepeatMode'
 import {REMINDER_PERIOD_RELATIVE_TO_TYPES} from '@/types/IReminderPeriodRelativeTo'
 import {playPopSound} from '@/helpers/playPop'
 import {taskLoadErrorAction} from './taskDetailError'
+import TaskClaimNotice from '@/components/tasks/partials/TaskClaimNotice.vue'
 import TaskInTrashNotice from '@/components/tasks/partials/TaskInTrashNotice.vue'
 import ProjectInTrashNotice from '@/components/project/ProjectInTrashNotice.vue'
 

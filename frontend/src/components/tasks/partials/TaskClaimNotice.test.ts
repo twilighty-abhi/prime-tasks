@@ -11,7 +11,7 @@ vi.mock('@/helpers/time/formatDate', () => ({
 import TaskClaimNotice from './TaskClaimNotice.vue'
 import type {TaskClaim} from '@/client/generated'
 
-function claimExpiringIn(ms: number): TaskClaim {
+function claimExpiringIn(ms: number, botName = 'Review Bot'): TaskClaim {
 	return {
 		task_id: 1,
 		bot_id: 23,
@@ -20,9 +20,9 @@ function claimExpiringIn(ms: number): TaskClaim {
 		bot: {
 			id: 23,
 			username: 'bot-reviewer',
-			name: 'Review Bot',
+			name: botName,
 		},
-	} as TaskClaim
+	}
 }
 
 function mountNotice(claim: TaskClaim) {
@@ -57,13 +57,7 @@ describe('TaskClaimNotice', () => {
 	})
 
 	it('falls back to the username when the bot has no name', () => {
-		const claim = claimExpiringIn(60 * 60 * 1000)
-		claim.bot = {
-			id: 23,
-			username: 'bot-reviewer',
-			name: '',
-		} as TaskClaim['bot']
-		const wrapper = mountNotice(claim)
+		const wrapper = mountNotice(claimExpiringIn(60 * 60 * 1000, ''))
 
 		expect(wrapper.find('.task-claim__bot').text()).toBe('bot-reviewer')
 	})
