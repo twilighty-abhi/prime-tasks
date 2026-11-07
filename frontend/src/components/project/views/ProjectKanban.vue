@@ -979,15 +979,15 @@ $filter-container-height: '1rem - #{$switch-view-height}';
 		}
 
 		.task-item {
-			padding: .25rem .5rem;
+			padding: 3px 6px; // prime-tasks: compact cards
 			position: relative;
 
 			&:first-of-type {
-				padding-block-start: .5rem;
+				padding-block-start: 6px;
 			}
 
 			&:last-of-type {
-				padding-block-end: .5rem;
+				padding-block-end: 6px;
 			}
 
 			.handle {
@@ -1121,7 +1121,7 @@ $filter-container-height: '1rem - #{$switch-view-height}';
 	// Doubled class to outrank the global :root:root .button rules in theme/yuyu.scss.
 	.bucket .button.kanban-ghost-button.kanban-ghost-button {
 		justify-content: center;
-		min-block-size: 44px;
+		min-block-size: 36px;
 		border: 1.5px dashed var(--yy-border-strong, var(--grey-300));
 		border-radius: var(--yy-radius-md, 12px);
 		background-color: transparent;

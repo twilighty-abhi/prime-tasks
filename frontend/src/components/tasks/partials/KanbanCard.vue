@@ -28,35 +28,26 @@
 			class="kanban-card__cover"
 		>
 		<div class="kanban-card__body">
-			<div class="kanban-card__top">
-				<span class="task-id">
-					{{ getTaskIdentifier(task) }}
-					<span
-						v-if="showTaskPosition"
-						class="tw:text-red-600 tw:ps-2"
+			<!-- prime-tasks: compact card: the Done chip sits beside the title, the identifier leads the footer -->
+			<div class="kanban-card__heading">
+				<h3 class="kanban-card__title">
+					<RouterLink
+						:to="{ name: 'task.detail', params: {id: task.id} }"
+						class="kanban-card__title-link"
+						draggable="false"
+						@click.exact.prevent.stop="openTaskDetail()"
+						@click.ctrl.stop
+						@click.meta.stop
 					>
-						{{ task.position }}
-					</span>
-				</span>
+						{{ task.title }}
+					</RouterLink>
+				</h3>
 				<Done
 					class="kanban-card__done"
 					:is-done="task.done"
 					variant="small"
 				/>
 			</div>
-
-			<h3 class="kanban-card__title">
-				<RouterLink
-					:to="{ name: 'task.detail', params: {id: task.id} }"
-					class="kanban-card__title-link"
-					draggable="false"
-					@click.exact.prevent.stop="openTaskDetail()"
-					@click.ctrl.stop
-					@click.meta.stop
-				>
-					{{ task.title }}
-				</RouterLink>
-			</h3>
 
 			<span
 				v-if="projectTitle"
@@ -80,6 +71,15 @@
 			</div>
 
 			<div class="footer">
+				<span class="task-id">
+					{{ getTaskIdentifier(task) }}
+					<span
+						v-if="showTaskPosition"
+						class="tw:text-red-600 tw:ps-2"
+					>
+						{{ task.position }}
+					</span>
+				</span>
 				<span
 					v-if="new Date(task.due_date ?? 0).getTime() > 0"
 					v-tooltip="formatDateLong(task.due_date)"
@@ -126,7 +126,7 @@
 					v-if="task.assignees.length > 0"
 					class="kanban-card__assignees"
 					:assignees="task.assignees"
-					:avatar-size="24"
+					:avatar-size="20"
 				/>
 			</div>
 		</div>
@@ -326,7 +326,7 @@ onBeforeUnmount(() => {
 
 	background: var(--yy-bg-canvas, var(--white));
 	border: 1px solid var(--yy-border, var(--grey-200));
-	border-radius: var(--yy-radius-lg, 16px);
+	border-radius: var(--yy-radius-md, 12px); // compact: r-md
 	box-shadow: none;
 	color: var(--yy-text-secondary, var(--text));
 	font-family: var(--yy-font-body, $family-sans-serif);
@@ -357,13 +357,13 @@ onBeforeUnmount(() => {
 	inset-block-start: 0;
 	inset-inline: 0;
 	z-index: 1;
-	block-size: 4px;
+	block-size: 3px;
 }
 
 .kanban-card__cover {
 	display: block;
 	inline-size: 100%;
-	max-block-size: 180px;
+	max-block-size: 112px;
 	object-fit: cover;
 	border-block-end: 1px solid var(--yy-border, var(--grey-200));
 }
@@ -371,21 +371,20 @@ onBeforeUnmount(() => {
 .kanban-card__body {
 	display: flex;
 	flex-direction: column;
-	gap: var(--yy-space-2, .5rem);
-	padding: var(--yy-space-3, .75rem) var(--yy-space-4, 1rem) var(--yy-space-3, .75rem);
+	gap: 6px;
+	padding: var(--yy-space-2, .5rem) var(--yy-space-3, .75rem);
 }
 
 .has-cover .kanban-card__body,
 .kanban-card__band + .kanban-card__body {
-	padding-block-start: calc(var(--yy-space-3, .75rem) + 2px);
+	padding-block-start: calc(var(--yy-space-2, .5rem) + 2px);
 }
 
-.kanban-card__top {
+.kanban-card__heading {
 	display: flex;
-	align-items: center;
+	align-items: flex-start;
 	justify-content: space-between;
 	gap: var(--yy-space-2, .5rem);
-	min-block-size: 1.25rem;
 }
 
 .task-id,
@@ -393,14 +392,14 @@ onBeforeUnmount(() => {
 	display: flex;
 	align-items: center;
 	color: var(--yy-text-muted, var(--grey-500));
-	font-size: .75rem;
+	font-size: .6875rem;
 	font-weight: 600;
 	letter-spacing: .02em;
 	font-variant-numeric: tabular-nums;
 }
 
 .project-title {
-	margin-block-start: calc(var(--yy-space-1, .25rem) * -1);
+	margin-block-start: -2px;
 }
 
 // Doubled class to outrank the global :root:root h3 heading rule in theme/yuyu.scss.
@@ -408,10 +407,10 @@ h3.kanban-card__title.kanban-card__title {
 	margin: 0;
 	color: var(--yy-text, var(--text-strong));
 	font-family: var(--yy-font-body, $family-sans-serif);
-	font-size: .9375rem;
+	font-size: .875rem;
 	font-weight: 600 !important; // upstream theme.scss and yuyu.scss force heading weights with !important
 	letter-spacing: 0;
-	line-height: 1.35;
+	line-height: 1.3;
 	text-wrap: pretty;
 	overflow-wrap: anywhere;
 }
@@ -428,7 +427,7 @@ h3.kanban-card__title.kanban-card__title {
 .task-progress {
 	margin: 0;
 	inline-size: 100%;
-	block-size: .375rem;
+	block-size: .25rem;
 }
 
 // Labels and priority as Yuyu chips (pills, 12px, weight 700).
@@ -436,20 +435,20 @@ h3.kanban-card__title.kanban-card__title {
 	display: flex;
 	flex-wrap: wrap;
 	align-items: center;
-	gap: 6px;
+	gap: 4px;
 
 	&:empty {
 		display: none;
 	}
 
 	:deep(.label-wrapper) {
-		gap: 6px;
+		gap: 4px;
 	}
 
 	:deep(.tag) {
 		block-size: auto;
-		padding: 2px 10px;
-		font-size: .75rem;
+		padding: 1px 8px;
+		font-size: .6875rem;
 		font-weight: 700;
 		line-height: 1.4;
 	}
@@ -457,12 +456,12 @@ h3.kanban-card__title.kanban-card__title {
 	:deep(.priority-label) {
 		display: inline-flex;
 		align-items: center;
-		gap: var(--yy-space-1, .25rem);
-		padding: 2px 10px;
+		gap: 3px;
+		padding: 1px 8px;
 		border-radius: var(--yy-radius-full, 999px);
 		background: var(--yy-bg-muted, var(--grey-100));
 		color: var(--yy-text-secondary, var(--grey-700));
-		font-size: .75rem;
+		font-size: .6875rem;
 		font-weight: 700;
 		line-height: 1.4;
 
@@ -470,7 +469,7 @@ h3.kanban-card__title.kanban-card__title {
 			block-size: auto;
 			inline-size: auto;
 			padding: 0;
-			font-size: .75rem;
+			font-size: .6875rem;
 		}
 	}
 
@@ -485,18 +484,18 @@ h3.kanban-card__title.kanban-card__title {
 	}
 }
 
-// Meta row under a hairline, like the footer of Yuyu's Discover card.
+// Meta row: identifier, due date, indicators, assignees. Compact: no hairline, one tight line.
 .footer {
 	display: flex;
 	flex-wrap: wrap;
 	align-items: center;
-	gap: var(--yy-space-1, .25rem) var(--yy-space-3, .75rem);
-	margin-block-start: var(--yy-space-1, .25rem);
-	padding: var(--yy-space-2, .5rem) 0 0;
-	border-block-start: 1px solid var(--yy-border, var(--grey-200));
+	gap: 2px var(--yy-space-2, .5rem);
+	margin: 0;
+	padding: 0;
+	border: 0;
 	background: transparent;
 	color: var(--yy-text-muted, var(--grey-500));
-	font-size: .8125rem;
+	font-size: .75rem;
 
 	&:empty {
 		display: none;
@@ -510,13 +509,13 @@ h3.kanban-card__title.kanban-card__title {
 
 	:deep(.comment-count) {
 		color: var(--yy-text-muted, var(--grey-500));
-		font-size: .8125rem;
+		font-size: .75rem;
 	}
 
 	:deep(.checklist-summary) {
 		padding-inline-start: 0;
 		color: var(--yy-text-muted, var(--grey-500));
-		font-size: .8125rem;
+		font-size: .75rem;
 	}
 }
 
