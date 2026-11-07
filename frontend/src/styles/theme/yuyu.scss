@@ -327,10 +327,27 @@ body {
     box-shadow: none;
   }
 
+  // Card titles are Yuyu h4 (Bricolage 800 20px, like the AccountCard); padding on the 4px scale.
   .card-header-title {
     color: var(--yy-text);
     font-family: var(--yy-font-display);
     font-weight: 800;
+    font-size: 20px;
+    line-height: 1.25;
+    padding: var(--yy-space-4) var(--yy-space-5);
+
+    @media screen and (max-width: 640px) {
+      font-size: 18px;
+      padding-inline: var(--yy-space-4);
+    }
+  }
+
+  .card-content:not(.p-0) {
+    padding: var(--yy-space-5);
+
+    @media screen and (max-width: 640px) {
+      padding: var(--yy-space-4);
+    }
   }
 
   .card-footer {
