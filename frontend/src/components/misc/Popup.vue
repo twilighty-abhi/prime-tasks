@@ -108,6 +108,16 @@ function toggle() {
 		closedByLightDismiss = false
 		return false
 	}
+
+	// The browser hides a light-dismissed popover at once but delivers the toggle event later. A click
+	// in that gap would see a stale open state and close what is already closed, so treat the pending
+	// dismissal as done and let this click reopen it.
+	const el = popup.value
+	if (openValue.value && el && popoverShown && hasPopoverApi(el) && !el.matches(':popover-open')) {
+		el.showPopover()
+		return true
+	}
+
 	openValue.value = !openValue.value
 	emit('update:open', openValue.value)
 	return openValue.value
