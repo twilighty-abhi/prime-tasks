@@ -1,12 +1,13 @@
 # prime-tasks config for the office VM (mounted at /etc/vikunja/config.yml).
 # Secrets and the public URL come from .env through docker-compose.yml:
-#   VIKUNJA_SERVICE_PUBLICURL, VIKUNJA_SERVICE_SECRET, VIKUNJA_DATABASE_PASSWORD
+#   VIKUNJA_SERVICE_PUBLICURL, VIKUNJA_SERVICE_SECRET, VIKUNJA_DATABASE_PASSWORD,
+#   VIKUNJA_AUTH_OPENID_PROVIDERS_GOOGLE_CLIENTID, VIKUNJA_AUTH_OPENID_PROVIDERS_GOOGLE_CLIENTSECRET
 # Full reference: config.yml.sample at the repo root (generated, don't edit).
 
 service:
   interface: ":3456"
   timezone: "Asia/Kolkata"
-  # Accounts come from an admin (`vikunja user create`) or, later, Google sign-in.
+  # Accounts come from Google sign-in (first sign-in creates the account) or an admin (`vikunja user create`).
   enableregistration: false
   # Phase 0
   enablepublicteams: true
@@ -54,17 +55,22 @@ log:
 auth:
   local:
     enabled: true
+    # prime-tasks G1: the login page leads with "Sign in with Google"; username and password
+    # sit under "Other ways to sign in" (admin-created accounts and agent bots still use them).
+    foldonlogin: true
   openid:
-    enabled: false
-    # Google sign-in. Redirect URL to register in Google Cloud: https://<PRIME_DOMAIN>/auth/openid/google
-    # Put the secret in .env as VIKUNJA_AUTH_OPENID_PROVIDERS_GOOGLE_CLIENTSECRET rather than here.
-    # providers:
-    #   google:
-    #     name: "Google"
-    #     authurl: "https://accounts.google.com"
-    #     clientid: "<client id>.apps.googleusercontent.com"
-    #     clientsecret: ""
-    #     scope: "openid email profile"
-    #     emailfallback: true
-    #     usernamefallback: true
-    #     usernamefromemail: true
+    enabled: true
+    # Google sign-in (G1). Redirect URI to register in Google Cloud: https://<PRIME_DOMAIN>/auth/openid/google
+    # (see README.md, "Google sign-in"). The client id and secret come from .env (PRIME_GOOGLE_CLIENT_ID,
+    # PRIME_GOOGLE_CLIENT_SECRET); docker-compose.yml passes them in as
+    # VIKUNJA_AUTH_OPENID_PROVIDERS_GOOGLE_CLIENTID / _CLIENTSECRET, which fill in the two keys missing here.
+    providers:
+      google:
+        name: "Google"
+        authurl: "https://accounts.google.com"
+        scope: "openid email profile"
+        # A verified Google email signs in to the account an admin already created for it.
+        emailfallback: true
+        usernamefallback: true
+        # F7: new users get the email's local part as username (abhiram, abhiram2 on a clash)
+        usernamefromemail: true
