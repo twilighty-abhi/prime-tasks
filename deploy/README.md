@@ -44,8 +44,8 @@ prime-tasks runs without a Vikunja license, so the instance admin panel and `vik
 available. Nothing below needs them.
 
 - **Accounts.** Registration is off. People sign in with Google (see [Google sign-in](#google-sign-in)); the
-  first sign-in creates their account. For an account without Google (an agent bot, a contractor), create it on
-  the VM:
+  first sign-in creates their account. Agent bots have their own command (see [Agent bots](#agent-bots)). For a
+  person without Google (a contractor), create the account on the VM:
 
   ```bash
   docker compose exec prime-tasks /app/vikunja/vikunja user create -u <username> -e <email>
@@ -97,6 +97,53 @@ In [Google Cloud Console](https://console.cloud.google.com/):
 
 The stack refuses to start while either variable is empty. Google answers `redirect_uri_mismatch` when the address in
 the browser differs from the registered URI (`http` vs `https`, `www.`, a port).
+
+## Agent bots
+
+Give every agent (each Claude Code install, each automation) its own bot user, so its work shows under its own
+name, its claims (A5) are its own, and it can be cut off alone. A bot belongs to one person, its owner; the
+owner signs in with Google and needs no password for this. Run on the VM, from the repository root:
+
+```bash
+scripts/new-agent-bot.sh --owner <owner username> --name <agent name> [--expires 90d]
+```
+
+This runs `vikunja bot create` inside the stack (`docker compose -f deploy/docker-compose.yml exec -T prime-tasks
+/app/vikunja/vikunja bot create ...`). It creates the bot user `bot-<agent name>` owned by that person and an API
+token with the **Agent (safe)** permissions (the preset of the same name in Settings → MCP: read, create and
+update tasks, comments and labels, assign people, add labels, claim and release; no deletes, no sharing). The
+token expires after 90 days unless `--expires` says otherwise (`30d`, `36h` or a date like `2027-01-31`). It
+prints, once:
+
+```text
+bot: bot-claude-laptop (id 42)
+owner: abhiram (id 3)
+token_expires: 2027-02-05T10:00:00Z
+mcp_endpoint: https://tasks.example.org/api/v2/mcp
+token: tk_…
+claude: claude mcp add --transport http claude-laptop https://tasks.example.org/api/v2/mcp --header "Authorization: Bearer tk_…"
+```
+
+Run the `claude` line on the agent's machine. The token is stored only as a hash and can't be shown again; the
+script writes it nowhere, so don't redirect the output into a file you keep. For a new token for the same bot
+(lost, expiring), add `--reuse`. Off the VM, `--local --binary <path> --config <config.yml>` runs a local binary
+instead.
+
+**Share projects with the bot.** A new bot sees nothing. Its owner opens a project they administer, **Share**,
+searches for `bot-<agent name>` and gives it **Read & write**. Only the owner finds their bots in the share
+dialog; to give a bot someone else's project, that project's admin first gives the owner admin access, or adds
+the bot through the API (`POST /api/v2/projects/{project}/users` with `{"username": "bot-<agent name>",
+"permission": 1}`). Leave out projects the agent has no business in.
+
+**Revoke a bot.**
+
+```bash
+scripts/new-agent-bot.sh --revoke --owner <owner username> --name <agent name>
+```
+
+This deletes all of the bot's tokens and disables it; its comments, shares and history stay, and
+`--reuse` brings it back with a new token. The owner can also delete single tokens or the bot itself in
+Settings (API tokens, Bots).
 
 ## Migrating from an existing Vikunja
 
