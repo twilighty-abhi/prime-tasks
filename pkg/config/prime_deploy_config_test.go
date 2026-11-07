@@ -76,6 +76,7 @@ func TestDeployConfigGoogleSignIn(t *testing.T) {
 		assert.Equal(t, "openid email profile", google["scope"])
 		assert.Equal(t, true, google["emailfallback"])
 		assert.Equal(t, true, google["usernamefallback"])
+		assert.Equal(t, true, google["usernamefromemail"])
 		assert.Equal(t, "id-from-env.apps.googleusercontent.com", google["clientid"])
 		assert.Equal(t, "secret-from-env", google["clientsecret"])
 	})
