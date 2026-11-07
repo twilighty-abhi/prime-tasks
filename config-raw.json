@@ -793,6 +793,11 @@
                             "key": "enabled",
                             "default_value": "true",
                             "comment": "Enable or disable local authentication"
+                        },
+                        {
+                            "key": "foldonlogin",
+                            "default_value": "false",
+                            "comment": "prime-tasks: if enabled and at least one OpenID Connect provider is configured, the login page shows the provider buttons as the main action and folds the username and password form under an \"Other ways to sign in\" link. Local login keeps working. Has no effect without OpenID providers."
                         }
                     ]
                 },

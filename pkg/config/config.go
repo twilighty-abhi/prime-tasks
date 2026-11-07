@@ -84,9 +84,11 @@ const (
 	SentryFrontendEnabled Key = `sentry.frontendenabled`
 	SentryFrontendDsn     Key = `sentry.frontenddsn`
 
-	AuthLocalEnabled    Key = `auth.local.enabled`
-	AuthOpenIDEnabled   Key = `auth.openid.enabled`
-	AuthOpenIDProviders Key = `auth.openid.providers`
+	AuthLocalEnabled Key = `auth.local.enabled`
+	// prime-tasks G1: fold the username/password form under the OpenID provider buttons on the login page.
+	AuthLocalFoldOnLogin Key = `auth.local.foldonlogin`
+	AuthOpenIDEnabled    Key = `auth.openid.enabled`
+	AuthOpenIDProviders  Key = `auth.openid.providers`
 
 	AuthLdapEnabled    Key = `auth.ldap.enabled`
 	AuthLdapHost       Key = `auth.ldap.host`
@@ -419,6 +421,7 @@ func initDefaultConfig() {
 
 	// Auth
 	AuthLocalEnabled.setDefault(true)
+	AuthLocalFoldOnLogin.setDefault(false)
 	AuthOpenIDEnabled.setDefault(false)
 
 	AuthLdapEnabled.setDefault(false)
