@@ -32,6 +32,7 @@ const (
 )
 
 // Anything not listed stays off MCP; credentials, account, webhooks, shares, file transfer and admin routes are deliberately absent.
+// prime-tasks: leaving a project (project-shares-leave) is deliberately absent too; an agent should not drop its own access.
 var exposedOperations = map[string]toolTier{
 	"buckets-create":                  catalogTool,
 	"buckets-delete":                  catalogTool,
@@ -50,6 +51,7 @@ var exposedOperations = map[string]toolTier{
 	"notifications-list":              catalogTool,
 	"notifications-mark-all-read":     catalogTool,
 	"notifications-mark-read":         catalogTool,
+	"project-access-list":             catalogTool,
 	"project-tasks-list":              catalogTool,
 	"project-teams-create":            catalogTool,
 	"project-teams-delete":            catalogTool,
@@ -81,6 +83,7 @@ var exposedOperations = map[string]toolTier{
 	"task-assignees-create":           typedTool,
 	"task-assignees-delete":           typedTool,
 	"task-assignees-list":             typedTool,
+	"task-assignees-share-and-assign": catalogTool,
 	"task-attachments-delete":         catalogTool,
 	"task-attachments-list":           catalogTool,
 	"task-bucket-update":              catalogTool,

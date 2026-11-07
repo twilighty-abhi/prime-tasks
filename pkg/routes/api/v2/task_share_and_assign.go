@@ -31,7 +31,7 @@ func RegisterTaskShareAndAssignRoutes(api huma.API) {
 		OperationID: "task-assignees-share-and-assign",
 		Summary:     "Share the project with a user and assign them",
 		Description: "Assigns a user to the task. If they can't see the task's project yet, the project is first shared with them " +
-			"with read & write permission; both happen in one transaction. Only admins of the task's project may call this; " +
+			"with read & write permission; both happen in one transaction. Requires admin permission on the task's project; " +
 			"anyone else gets 403 and nothing is shared. The response says whether the project was shared.",
 		Method: http.MethodPost,
 		Path:   "/tasks/{task}/assignees/share",

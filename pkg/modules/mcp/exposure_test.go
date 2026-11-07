@@ -109,3 +109,24 @@ func TestExposure(t *testing.T) {
 		}
 	}
 }
+
+// prime-tasks A3: the fork's share-and-assign (F2) and access list (F5) are catalog actions; leaving a project (F4) is not exposed.
+func TestExposure_PrimeRoutes(t *testing.T) {
+	for _, id := range []string{
+		"task-assignees-share-and-assign",
+		"project-access-list",
+	} {
+		typed, ok := exposure(id, &huma.Operation{
+			OperationID: id,
+			Method:      http.MethodGet,
+		})
+		assert.True(t, ok, id)
+		assert.False(t, typed, id)
+	}
+	_, ok := exposure("project-shares-leave", &huma.Operation{
+		OperationID: "project-shares-leave",
+		Method:      http.MethodDelete,
+	})
+	assert.False(t, ok, "leaving a project must stay off MCP")
+	assert.NotContains(t, ExposedToolNames(), "project_shares_leave")
+}
