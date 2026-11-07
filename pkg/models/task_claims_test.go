@@ -38,6 +38,7 @@ var (
 	claimBotB     = &user.User{ID: 25}
 	claimBotRead  = &user.User{ID: 24}
 	claimOwner    = &user.User{ID: 1}
+	claimOwnerA   = &user.User{ID: 21}
 	claimStranger = &user.User{ID: 2}
 )
 
@@ -457,4 +458,81 @@ func TestTaskClaim_CleanupExpired(t *testing.T) {
 	assert.Empty(t, agentLabelIDsOnTask(t, 1))
 	db.AssertExists(t, "task_claims", map[string]any{"task_id": 3}, false)
 	assert.Len(t, agentLabelIDsOnTask(t, 3), 1)
+}
+
+func TestTaskClaim_ReleasedWhenBotBecomesUnusable(t *testing.T) {
+	disabled := user.StatusDisabled
+
+	// Claim task 1 with bot A and task 2 with bot B; the revoke must only touch bot A's claim.
+	setup := func(t *testing.T) {
+		t.Helper()
+		setupClaimTest(t)
+		_, err := claimTaskForTest(t, 1, claimBotA)
+		require.NoError(t, err)
+		_, err = claimTaskForTest(t, 2, claimBotB)
+		require.NoError(t, err)
+	}
+
+	assertReleased := func(t *testing.T, verb string) {
+		t.Helper()
+		db.AssertMissing(t, "task_claims", map[string]any{"task_id": 1})
+		assert.Empty(t, agentLabelIDsOnTask(t, 1))
+		db.AssertExists(t, "task_comments", map[string]any{
+			"task_id":   1,
+			"author_id": 23,
+			"comment":   "<p>Released: " + claimBotAName + " was " + verb + "</p>",
+		}, false)
+
+		// Bot B keeps its claim, label and gets no comment.
+		db.AssertExists(t, "task_claims", map[string]any{"task_id": 2, "bot_id": 25}, false)
+		assert.NotEmpty(t, agentLabelIDsOnTask(t, 2))
+		db.AssertMissing(t, "task_comments", map[string]any{"task_id": 2, "author_id": 23})
+
+		// Another bot can now claim task 1.
+		_, err := claimTaskForTest(t, 1, claimBotB)
+		require.NoError(t, err)
+	}
+
+	t.Run("the owner disables the bot", func(t *testing.T) {
+		setup(t)
+		s := db.NewSession()
+		defer s.Close()
+		bot := &BotUser{User: user.User{ID: 23, Name: "x"}, Status: &disabled}
+		require.NoError(t, bot.Update(s, claimOwnerA))
+		require.NoError(t, s.Commit())
+		assertReleased(t, "revoked")
+	})
+
+	t.Run("an admin or the CLI changes the bot status", func(t *testing.T) {
+		setup(t)
+		s := db.NewSession()
+		defer s.Close()
+		target := &user.User{}
+		_, err := s.ID(23).Get(target)
+		require.NoError(t, err)
+		require.NoError(t, ChangeUserStatus(s, nil, target, user.StatusDisabled))
+		require.NoError(t, s.Commit())
+		assertReleased(t, "revoked")
+	})
+
+	t.Run("re-enabling the bot does not touch claims", func(t *testing.T) {
+		setup(t)
+		s := db.NewSession()
+		defer s.Close()
+		target := &user.User{}
+		_, err := s.ID(23).Get(target)
+		require.NoError(t, err)
+		require.NoError(t, ChangeUserStatus(s, nil, target, user.StatusActive))
+		require.NoError(t, s.Commit())
+		db.AssertExists(t, "task_claims", map[string]any{"task_id": 1, "bot_id": 23}, false)
+	})
+
+	t.Run("the owner deletes the bot", func(t *testing.T) {
+		setup(t)
+		s := db.NewSession()
+		defer s.Close()
+		require.NoError(t, (&BotUser{User: user.User{ID: 23}}).Delete(s, claimOwnerA))
+		require.NoError(t, s.Commit())
+		assertReleased(t, "removed")
+	})
 }
