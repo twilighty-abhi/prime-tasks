@@ -102,13 +102,13 @@ func TestGetOrCreateUserUsernameFromEmail(t *testing.T) {
 		assert.Equal(t, "user1-2", u.Username)
 	})
 
-	t.Run("a clash with a bot user counts", func(t *testing.T) {
+	t.Run("a reserved bot- prefix is avoided", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
 		defer s.Close()
 
-		// Bot usernames start with bot-, which is reserved, so the base is
-		// prefixed; the existing bot still must not be reused.
+		// bot- is reserved for bot users (and matches an existing bot here), so
+		// the base gets a user- prefix instead of reusing the bot name.
 		u := createOpenIDUserForTest(t, s, provider, &claims{Email: "bot-owner-a-assistant@corp.example"}, "sub-1")
 		require.NoError(t, s.Commit())
 
@@ -142,7 +142,7 @@ func TestGetOrCreateUserUsernameFromEmail(t *testing.T) {
 		s := db.NewSession()
 		defer s.Close()
 
-		name := "Ábhíram ñ 日本"
+		name := "Ábhíram ñ 日本" //nolint:gosmopolitan // unicode display names are the point of this test
 		u := createOpenIDUserForTest(t, s, provider, &claims{Email: "abhiram@t4gc.org", Name: name}, "sub-1")
 		require.NoError(t, s.Commit())
 
@@ -227,7 +227,7 @@ func TestSanitizeUsernameCandidate(t *testing.T) {
 		"  spaced  ":             "spaced",
 		"tab\there":              "tab-here",
 		"comma,name":             "comma-name",
-		"日本":                     "日本",
+		"日本":                     "日本", //nolint:gosmopolitan // non-Latin usernames must survive sanitising
 		"bot-x":                  "user-bot-x",
 		"":                       "",
 		strings.Repeat("a", 300): strings.Repeat("a", maxUsernameBaseLength),

@@ -316,6 +316,7 @@ func getProviderFromMap(pi map[string]interface{}, key string) (provider *Provid
 			"usernamefallback",
 			"forceuserinfo",
 			"requireavailability",
+			"usernamefromemail",
 		},
 		requiredKeys...,
 	)
@@ -371,6 +372,10 @@ func getProviderFromMap(pi map[string]interface{}, key string) (provider *Provid
 	if err != nil {
 		log.Errorf("requireavailability is not a boolean for provider %s: %s", key, err)
 	}
+	usernameFromEmail, err := parseBoolField(pi, "usernamefromemail")
+	if err != nil {
+		log.Errorf("usernamefromemail is not a boolean for provider %s: %s", key, err)
+	}
 	logFallbackOptionsDeprecation(key, emailFallback, usernameFallback)
 
 	provider = &Provider{
@@ -385,6 +390,7 @@ func getProviderFromMap(pi map[string]interface{}, key string) (provider *Provid
 		UsernameFallback:    usernameFallback,
 		ForceUserInfo:       forceUserInfo,
 		RequireAvailability: requireAvailability,
+		UsernameFromEmail:   usernameFromEmail,
 	}
 
 	cl, is := pi["clientid"].(int)
