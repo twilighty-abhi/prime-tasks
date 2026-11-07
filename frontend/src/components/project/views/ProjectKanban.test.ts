@@ -296,4 +296,29 @@ describe('ProjectKanban', () => {
 
 		expect(updateBucket).not.toHaveBeenCalled()
 	})
+	// prime-tasks: Yuyu quiet columns; the add controls are dashed ghost rows, not outlined pills.
+	it('shows the add task control as a quiet ghost row', async () => {
+		const wrapper = await mountKanban({BucketDraggable: DRAGGABLE_STUB, TaskDraggable: DRAGGABLE_STUB})
+
+		const addTask = wrapper.get('.bucket-footer x-button-stub')
+		expect(addTask.classes()).toContain('kanban-ghost-button')
+		expect(addTask.attributes('variant')).toBe('tertiary')
+	})
+
+	it('shows the create bucket control as a quiet ghost row', async () => {
+		const wrapper = await mountKanban({BucketDraggable: DRAGGABLE_STUB, TaskDraggable: DRAGGABLE_STUB})
+
+		const addBucket = wrapper.get('.new-bucket x-button-stub')
+		expect(addBucket.classes()).toContain('kanban-ghost-button')
+		expect(addBucket.attributes('variant')).toBe('tertiary')
+	})
+
+	it('shows the bucket limit count as a chip', async () => {
+		loadBoard.mockResolvedValue({data: {items: [{...buckets[0], count: 1, limit: 3}, buckets[1], buckets[2]]}})
+		const wrapper = await mountKanban({BucketDraggable: DRAGGABLE_STUB, TaskDraggable: DRAGGABLE_STUB})
+
+		const count = wrapper.get('.bucket-header span.limit')
+		expect(count.classes()).toContain('bucket-count')
+		expect(count.text()).toContain('1/3')
+	})
 })
