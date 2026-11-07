@@ -74,9 +74,10 @@ func TestMCPInfo(t *testing.T) {
 			require.NoError(t, json.Unmarshal(info.Presets["typed"], &typed))
 			crud := []string{"create", "delete", "read_all", "read_one", "update"}
 			assert.Len(t, typed, 6)
-			for _, group := range []string{"tasks", "projects", "labels", "tasks_comments"} {
+			for _, group := range []string{"projects", "labels", "tasks_comments"} {
 				assert.ElementsMatch(t, crud, typed[group], group)
 			}
+			assert.ElementsMatch(t, append(crud, "claim", "release"), typed["tasks"])
 			assert.ElementsMatch(t, []string{"create", "delete", "read_all"}, typed["tasks_assignees"])
 			// prime-tasks A4: my_work is a typed tool in the other group, next to users.
 			assert.ElementsMatch(t, []string{"my_work", "users"}, typed["other"])
