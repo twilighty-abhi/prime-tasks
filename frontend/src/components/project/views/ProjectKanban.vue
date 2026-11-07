@@ -69,7 +69,7 @@
 										v-if="bucket.limit > 0 || alwaysShowBucketTaskCount"
 										v-tooltip="isBucketFull(bucket) ? $t('project.kanban.bucketLimitReached') : ''"
 										:class="{'is-max': isBucketFull(bucket)}"
-										class="limit"
+										class="limit bucket-count"
 									>
 										<Icon
 											v-if="isBucketFull(bucket)"
@@ -211,10 +211,10 @@
 											<XButton
 												v-else
 												v-tooltip="isBucketFull(bucket) ? $t('project.kanban.bucketLimitReached') : ''"
-												class="is-fullwidth has-text-centered"
+												class="kanban-ghost-button is-fullwidth has-text-centered"
 												:shadow="false"
 												icon="plus"
-												variant="secondary"
+												variant="tertiary"
 												:disabled="isBucketFull(bucket)"
 												@click="toggleShowNewTaskInput(bucket.id)"
 											>
@@ -270,8 +270,8 @@
 						<XButton
 							v-else
 							:shadow="false"
-							class="is-transparent is-fullwidth has-text-centered"
-							variant="secondary"
+							class="kanban-ghost-button is-fullwidth has-text-centered"
+							variant="tertiary"
 							icon="plus"
 							@click="() => showNewBucketInput = true"
 						>
@@ -948,13 +948,16 @@ $filter-container-height: '1rem - #{$switch-view-height}';
 			inset-inline-end: 0.5rem;
 			inset-block-end: 0.25rem;
 			inset-inline-start: 0.5rem;
-			border: 3px dashed var(--grey-300);
-			border-radius: $radius;
+			border: 1.5px dashed var(--yy-border-strong, var(--grey-300));
+			border-radius: var(--yy-radius-lg, 16px);
 		}
 	}
 
+	// prime-tasks: Yuyu quiet column: bg-subtle, 1px border, r-lg.
 	.bucket {
-		border-radius: $radius;
+		border-radius: var(--yy-radius-lg, 16px);
+		border: 1px solid var(--yy-border, var(--grey-200));
+		background: var(--yy-bg-subtle, var(--grey-50));
 		position: relative;
 
 		margin: 0 $bucket-right-margin 0 0;
@@ -976,16 +979,15 @@ $filter-container-height: '1rem - #{$switch-view-height}';
 		}
 
 		.task-item {
-			background-color: var(--grey-100);
-			padding: .25rem .5rem;
+			padding: 3px 6px; // prime-tasks: compact cards
 			position: relative;
 
 			&:first-of-type {
-				padding-block-start: .5rem;
+				padding-block-start: 6px;
 			}
 
 			&:last-of-type {
-				padding-block-end: .5rem;
+				padding-block-end: 6px;
 			}
 
 			.handle {
@@ -1004,9 +1006,12 @@ $filter-container-height: '1rem - #{$switch-view-height}';
 		}
 
 		h2 {
-			font-size: 1rem;
 			margin: 0;
-			font-weight: 600 !important;
+			color: var(--yy-text, var(--text-strong));
+			font-family: var(--yy-font-display, $vikunja-font);
+			font-size: 1rem;
+			font-weight: 800 !important;
+			letter-spacing: -0.01em;
 		}
 
 		&.new-bucket {
@@ -1016,9 +1021,9 @@ $filter-container-height: '1rem - #{$switch-view-height}';
 			// to hide the fact we just made the button smaller.
 			min-inline-size: calc(#{$bucket-width} + 1rem);
 			background: transparent;
+			border: 0;
 
-			.button {
-				background: var(--grey-100);
+			.button.kanban-ghost-button {
 				inline-size: 100%;
 			}
 		}
@@ -1038,7 +1043,7 @@ $filter-container-height: '1rem - #{$switch-view-height}';
 	}
 
 	.bucket-header {
-		background-color: var(--grey-100);
+		background-color: transparent;
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
@@ -1049,21 +1054,48 @@ $filter-container-height: '1rem - #{$switch-view-height}';
 			cursor: pointer;
 		}
 
-		.limit {
-			padding: 0 .5rem;
-			font-weight: bold;
+		// the task count as a neutral Yuyu chip; a danger chip when the bucket is full
+		.limit.bucket-count {
+			display: inline-flex;
+			align-items: center;
+			flex-shrink: 0;
+			margin-inline: var(--yy-space-1, .25rem);
+			padding: 2px 10px;
+			border-radius: var(--yy-radius-full, 999px);
+			background: var(--yy-bg-muted, var(--grey-100));
+			color: var(--yy-text-secondary, var(--grey-700));
+			font-size: .75rem;
+			font-weight: 700;
+			line-height: 1.4;
 			white-space: nowrap;
+			font-variant-numeric: tabular-nums;
 
 			&.is-max {
-				color: var(--danger-text);
+				background: var(--yy-danger-bg, #FEE2E2);
+				color: var(--yy-danger-fg, var(--danger-text));
 			}
 		}
 
 		.title.input {
+			flex: 1;
+			min-inline-size: 0;
 			block-size: auto;
 			padding: .4rem .5rem;
 			display: inline-block;
 			cursor: pointer;
+			background: transparent;
+			border-color: transparent;
+			border-radius: var(--yy-radius-md, 12px);
+			box-shadow: none;
+
+			&:hover {
+				background: var(--yy-bg-emphasis, var(--grey-100));
+			}
+
+			&:focus {
+				background: var(--yy-bg-canvas, var(--white));
+				border-color: var(--yy-control-border, var(--grey-400));
+			}
 		}
 	}
 
@@ -1077,19 +1109,35 @@ $filter-container-height: '1rem - #{$switch-view-height}';
 		z-index: 2;
 		block-size: min-content;
 		padding: .5rem;
-		background-color: var(--grey-100);
-		border-end-start-radius: $radius;
-		border-end-end-radius: $radius;
+		background-color: var(--yy-bg-subtle, var(--grey-50));
+		border-end-start-radius: var(--yy-radius-lg, 16px);
+		border-end-end-radius: var(--yy-radius-lg, 16px);
 		transform: none;
 		// At fractional device pixel ratios the scroll clip ends below the sticky footer, showing a sliver of tasks
-		box-shadow: 0 1px 0 var(--grey-100);
+		box-shadow: 0 1px 0 var(--yy-bg-subtle, var(--grey-50));
+	}
 
-		.button {
-			background-color: transparent;
+	// Yuyu empty state: a quiet dashed row instead of an outlined pill.
+	// Doubled class to outrank the global :root:root .button rules in theme/yuyu.scss.
+	.bucket .button.kanban-ghost-button.kanban-ghost-button {
+		justify-content: center;
+		min-block-size: 36px;
+		border: 1.5px dashed var(--yy-border-strong, var(--grey-300));
+		border-radius: var(--yy-radius-md, 12px);
+		background-color: transparent;
+		color: var(--yy-text-muted, var(--grey-500));
+		font-weight: 600;
+		text-decoration: none;
 
-			&:hover {
-				background-color: var(--white);
-			}
+		&:hover,
+		&:focus-visible {
+			border-color: var(--yy-control-border, var(--grey-400));
+			background-color: var(--yy-bg-canvas, var(--white));
+			color: var(--yy-text, var(--text-strong));
+		}
+
+		&[disabled] {
+			opacity: .6;
 		}
 	}
 }

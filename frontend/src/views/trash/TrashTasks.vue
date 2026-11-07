@@ -161,22 +161,38 @@ const {
 </script>
 
 <style lang="scss" scoped>
+// prime-tasks: Yuyu list (docs/DESIGN.md §4.8 in Yuyu): full-width rows with 1px separators.
 .trashed-tasks {
 	list-style: none;
 	margin: 0;
-	padding: .5rem;
+	padding: 0;
 }
 
 .trashed-task {
 	display: flex;
 	flex-wrap: wrap;
 	align-items: center;
-	padding: .4rem;
-	border-radius: $radius;
-	transition: background-color $transition;
+	gap: var(--yy-space-2, .5rem);
+	padding: var(--yy-space-3, .75rem) var(--yy-space-4, 1rem);
+	transition: background-color var(--yy-duration-hover, 180ms) var(--yy-ease, ease);
+
+	& + & {
+		border-block-start: 1px solid var(--yy-border, var(--grey-200));
+	}
 
 	&:hover {
-		background-color: var(--grey-100);
+		background-color: var(--yy-bg-subtle, var(--grey-100));
+	}
+
+	// Keep the hover fill inside the card's rounded corners.
+	&:first-child {
+		border-start-start-radius: calc(var(--yy-radius-lg, 16px) - 1px);
+		border-start-end-radius: calc(var(--yy-radius-lg, 16px) - 1px);
+	}
+
+	&:last-child {
+		border-end-start-radius: calc(var(--yy-radius-lg, 16px) - 1px);
+		border-end-end-radius: calc(var(--yy-radius-lg, 16px) - 1px);
 	}
 
 	.task {
@@ -186,9 +202,8 @@ const {
 
 .trashed-task-meta {
 	margin-inline-start: auto;
-	padding-inline: .75rem;
-	color: var(--grey-500);
-	font-size: .85rem;
+	color: var(--yy-text-muted, var(--grey-500));
+	font-size: .8125rem;
 	white-space: nowrap;
 }
 </style>

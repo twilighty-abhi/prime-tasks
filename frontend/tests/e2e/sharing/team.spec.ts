@@ -49,15 +49,17 @@ test.describe('Team', () => {
 			name: (i: number) => `paged team ${i}`,
 		})
 		const rows = page.locator('ul.teams li')
+		// Each row is a card with an initial tile and member meta, so compare the names only.
+		const names = rows.locator('.team-card__name')
 
 		await page.goto('/teams')
 		await expect(rows).toHaveCount(pageSize)
-		const firstPage = await rows.allTextContents()
+		const firstPage = await names.allTextContents()
 
 		await page.getByRole('link', {name: 'Goto page 2'}).click()
 		await expect(page).toHaveURL(/[?&]page=2/)
 		await expect(rows).toHaveCount(5)
-		const secondPage = await rows.allTextContents()
+		const secondPage = await names.allTextContents()
 
 		expect([...firstPage, ...secondPage].map(name => name.trim()).sort())
 			.toEqual(teams.map(team => team.name).sort())

@@ -85,7 +85,7 @@
 			:has-content="false"
 			:loading="loading"
 		>
-			<ul class="p-2 tasks">
+			<ul class="tasks">
 				<li
 					v-for="task in tasks"
 					:key="task.id"
@@ -319,9 +319,18 @@ watchEffect(() => setTitle(pageTitle.value))
 </script>
 
 <style lang="scss" scoped>
+// prime-tasks: Yuyu list (docs/DESIGN.md §4.8 in Yuyu): rows in the r-lg card, 1px separators between them.
 .tasks {
 	list-style: none;
 	margin: 0;
+
+	> li {
+		padding: 4px var(--yy-space-2, .5rem);
+	}
+
+	> li + li {
+		border-block-start: 1px solid var(--yy-border, var(--grey-200));
+	}
 }
 
 .show-tasks-options {

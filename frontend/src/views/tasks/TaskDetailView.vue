@@ -466,171 +466,199 @@
 					v-if="canWrite || isModal"
 					class="column is-one-third action-buttons d-print-none"
 				>
-					<template v-if="canWrite">
-						<XButton
-							v-shortcut="SHORTCUTS.taskDetail.done"
-							:class="{'is-pending': !task.done}"
-							class="button--mark-done"
-							icon="check-double"
-							variant="secondary"
-							@click="toggleTaskDone()"
-						>
-							{{ task.done ? $t('task.detail.undone') : $t('task.detail.done') }}
-						</XButton>
-						<TaskSubscription
-							entity="task"
-							:entity-id="task.id"
-							:model-value="task.subscription ?? null"
-							@toggle="toggleSubscription"
-						/>
-						<XButton
-							v-shortcut="SHORTCUTS.taskDetail.favorite"
-							variant="secondary"
-							:icon="task.is_favorite ? 'star' : ['far', 'star']"
-							@click="toggleFavorite"
-						>
-							{{
-								task.is_favorite ? $t('task.detail.actions.unfavorite') : $t('task.detail.actions.favorite')
-							}}
-						</XButton>
-						
-						<span class="action-heading">{{ $t('task.detail.organization') }}</span>
-						
-						<XButton
-							v-shortcut="SHORTCUTS.taskDetail.labels"
-							variant="secondary"
-							icon="tags"
-							@click="setFieldActive('labels')"
-						>
-							{{ $t('task.detail.actions.label') }}
-						</XButton>
-						<XButton
-							v-shortcut="SHORTCUTS.taskDetail.priority"
-							variant="secondary"
-							icon="exclamation-circle"
-							@click="setFieldActive('priority')"
-						>
-							{{ $t('task.detail.actions.priority') }}
-						</XButton>
-						<XButton
-							variant="secondary"
-							icon="percent"
-							@click="setFieldActive('percentDone')"
-						>
-							{{ $t('task.detail.actions.percentDone') }}
-						</XButton>
-						<XButton
-							v-shortcut="SHORTCUTS.taskDetail.color"
-							variant="secondary"
-							icon="fill-drip"
-							:icon-color="color"
-							@click="setFieldActive('color')"
-						>
-							{{ $t('task.detail.actions.color') }}
-						</XButton>
-						
-						<span class="action-heading">{{ $t('task.detail.management') }}</span>
+					<!-- prime-tasks: one Yuyu side card; "Mark task done" on top, the rest are quiet rows -->
+					<div
+						v-if="canWrite"
+						class="task-actions"
+					>
+						<div class="task-actions__group">
+							<XButton
+								v-shortcut="SHORTCUTS.taskDetail.done"
+								:class="{'is-pending': !task.done}"
+								class="button--mark-done"
+								icon="check-double"
+								variant="secondary"
+								@click="toggleTaskDone()"
+							>
+								{{ task.done ? $t('task.detail.undone') : $t('task.detail.done') }}
+							</XButton>
+							<TaskSubscription
+								class="task-action task-action-subscription"
+								variant="tertiary"
+								entity="task"
+								:entity-id="task.id"
+								:model-value="task.subscription ?? null"
+								@toggle="toggleSubscription"
+							/>
+							<XButton
+								v-shortcut="SHORTCUTS.taskDetail.favorite"
+								variant="tertiary"
+								class="task-action"
+								:icon="task.is_favorite ? 'star' : ['far', 'star']"
+								@click="toggleFavorite"
+							>
+								{{
+									task.is_favorite ? $t('task.detail.actions.unfavorite') : $t('task.detail.actions.favorite')
+								}}
+							</XButton>
+						</div>
+						<div class="task-actions__group">
+							<span class="task-actions__label">{{ $t('task.detail.organization') }}</span>
 
-						<XButton
-							v-shortcut="SHORTCUTS.taskDetail.assignees"
-							v-cy="'taskDetail.assign'"
-							variant="secondary"
-							icon="users"
-							@click="setFieldActive('assignees')"
-						>
-							{{ $t('task.detail.actions.assign') }}
-						</XButton>
-						<XButton
-							v-shortcut="SHORTCUTS.taskDetail.attachments"
-							variant="secondary"
-							icon="paperclip"
-							@click="openAttachments()"
-						>
-							{{ $t('task.detail.actions.attachments') }}
-						</XButton>
-						<XButton
-							v-shortcut="SHORTCUTS.taskDetail.relatedTasks"
-							variant="secondary"
-							icon="sitemap"
-							@click="setRelatedTasksActive()"
-						>
-							{{ $t('task.detail.actions.relatedTasks') }}
-						</XButton>
-						<XButton
-							v-shortcut="SHORTCUTS.taskDetail.moveProject"
-							variant="secondary"
-							icon="list"
-							@click="setFieldActive('moveProject')"
-						>
-							{{ $t('task.detail.actions.moveProject') }}
-						</XButton>
-						<XButton
-							variant="secondary"
-							icon="copy"
-							@click="duplicateCurrentTask"
-						>
-							{{ $t('task.detail.actions.duplicate') }}
-						</XButton>
+							<XButton
+								v-shortcut="SHORTCUTS.taskDetail.labels"
+								variant="tertiary"
+								class="task-action"
+								icon="tags"
+								@click="setFieldActive('labels')"
+							>
+								{{ $t('task.detail.actions.label') }}
+							</XButton>
+							<XButton
+								v-shortcut="SHORTCUTS.taskDetail.priority"
+								variant="tertiary"
+								class="task-action"
+								icon="exclamation-circle"
+								@click="setFieldActive('priority')"
+							>
+								{{ $t('task.detail.actions.priority') }}
+							</XButton>
+							<XButton
+								variant="tertiary"
+								class="task-action"
+								icon="percent"
+								@click="setFieldActive('percentDone')"
+							>
+								{{ $t('task.detail.actions.percentDone') }}
+							</XButton>
+							<XButton
+								v-shortcut="SHORTCUTS.taskDetail.color"
+								variant="tertiary"
+								class="task-action"
+								icon="fill-drip"
+								:icon-color="color"
+								@click="setFieldActive('color')"
+							>
+								{{ $t('task.detail.actions.color') }}
+							</XButton>
+						</div>
+						<div class="task-actions__group">
+							<span class="task-actions__label">{{ $t('task.detail.management') }}</span>
 
-						<span class="action-heading">{{ $t('task.detail.dateAndTime') }}</span>
+							<XButton
+								v-shortcut="SHORTCUTS.taskDetail.assignees"
+								v-cy="'taskDetail.assign'"
+								variant="tertiary"
+								class="task-action"
+								icon="users"
+								@click="setFieldActive('assignees')"
+							>
+								{{ $t('task.detail.actions.assign') }}
+							</XButton>
+							<XButton
+								v-shortcut="SHORTCUTS.taskDetail.attachments"
+								variant="tertiary"
+								class="task-action"
+								icon="paperclip"
+								@click="openAttachments()"
+							>
+								{{ $t('task.detail.actions.attachments') }}
+							</XButton>
+							<XButton
+								v-shortcut="SHORTCUTS.taskDetail.relatedTasks"
+								variant="tertiary"
+								class="task-action"
+								icon="sitemap"
+								@click="setRelatedTasksActive()"
+							>
+								{{ $t('task.detail.actions.relatedTasks') }}
+							</XButton>
+							<XButton
+								v-shortcut="SHORTCUTS.taskDetail.moveProject"
+								variant="tertiary"
+								class="task-action"
+								icon="list"
+								@click="setFieldActive('moveProject')"
+							>
+								{{ $t('task.detail.actions.moveProject') }}
+							</XButton>
+							<XButton
+								variant="tertiary"
+								class="task-action"
+								icon="copy"
+								@click="duplicateCurrentTask"
+							>
+								{{ $t('task.detail.actions.duplicate') }}
+							</XButton>
+						</div>
+						<div class="task-actions__group">
+							<span class="task-actions__label">{{ $t('task.detail.dateAndTime') }}</span>
 
-						<XButton
-							v-if="timeTrackingEnabled"
-							v-cy="'taskTrackTimeAction'"
-							variant="secondary"
-							:icon="['far', 'clock']"
-							@click="setFieldActive('timeTracking')"
-						>
-							{{ $t('task.detail.actions.timeTracking') }}
-						</XButton>
+							<XButton
+								v-if="timeTrackingEnabled"
+								v-cy="'taskTrackTimeAction'"
+								variant="tertiary"
+								class="task-action"
+								:icon="['far', 'clock']"
+								@click="setFieldActive('timeTracking')"
+							>
+								{{ $t('task.detail.actions.timeTracking') }}
+							</XButton>
 
-						<XButton
-							v-shortcut="SHORTCUTS.taskDetail.dueDate"
-							variant="secondary"
-							icon="calendar"
-							@click="setFieldActive('dueDate')"
-						>
-							{{ $t('task.detail.actions.dueDate') }}
-						</XButton>
-						<XButton
-							variant="secondary"
-							icon="play"
-							@click="setFieldActive('startDate')"
-						>
-							{{ $t('task.detail.actions.startDate') }}
-						</XButton>
-						<XButton
-							variant="secondary"
-							icon="stop"
-							@click="setFieldActive('endDate')"
-						>
-							{{ $t('task.detail.actions.endDate') }}
-						</XButton>
-						<XButton
-							v-shortcut="SHORTCUTS.taskDetail.reminder"
-							variant="secondary"
-							:icon="['far', 'clock']"
-							@click="setFieldActive('reminders')"
-						>
-							{{ $t('task.detail.actions.reminders') }}
-						</XButton>
-						<XButton
-							variant="secondary"
-							icon="history"
-							@click="setFieldActive('repeatAfter')"
-						>
-							{{ $t('task.detail.actions.repeatAfter') }}
-						</XButton>
-						<XButton
-							v-shortcut="SHORTCUTS.taskDetail.delete"
-							icon="trash-alt"
-							:shadow="false"
-							class="is-danger is-outlined has-no-border"
-							@click="deleteTask()"
-						>
-							{{ $t('task.detail.actions.delete') }}
-						</XButton>
-					</template>
+							<XButton
+								v-shortcut="SHORTCUTS.taskDetail.dueDate"
+								variant="tertiary"
+								class="task-action"
+								icon="calendar"
+								@click="setFieldActive('dueDate')"
+							>
+								{{ $t('task.detail.actions.dueDate') }}
+							</XButton>
+							<XButton
+								variant="tertiary"
+								class="task-action"
+								icon="play"
+								@click="setFieldActive('startDate')"
+							>
+								{{ $t('task.detail.actions.startDate') }}
+							</XButton>
+							<XButton
+								variant="tertiary"
+								class="task-action"
+								icon="stop"
+								@click="setFieldActive('endDate')"
+							>
+								{{ $t('task.detail.actions.endDate') }}
+							</XButton>
+							<XButton
+								v-shortcut="SHORTCUTS.taskDetail.reminder"
+								variant="tertiary"
+								class="task-action"
+								:icon="['far', 'clock']"
+								@click="setFieldActive('reminders')"
+							>
+								{{ $t('task.detail.actions.reminders') }}
+							</XButton>
+							<XButton
+								variant="tertiary"
+								class="task-action"
+								icon="history"
+								@click="setFieldActive('repeatAfter')"
+							>
+								{{ $t('task.detail.actions.repeatAfter') }}
+							</XButton>
+							<XButton
+								v-shortcut="SHORTCUTS.taskDetail.delete"
+								icon="trash-alt"
+								:shadow="false"
+								variant="tertiary"
+								class="task-action is-danger"
+								@click="deleteTask()"
+							>
+								{{ $t('task.detail.actions.delete') }}
+							</XButton>
+						</div>
+					</div>
 
 					<!-- Created / Updated [by] -->
 					<CreatedUpdated :task="task" />
@@ -1431,9 +1459,20 @@ h2 .button {
 	flex-flow: row wrap;
 	margin-block-end: 0;
 
+	// prime-tasks: Yuyu field label, muted 13px, with the value below it
 	.detail-title {
-		display: block;
-		color: var(--grey-400);
+		display: flex;
+		align-items: center;
+		gap: 6px;
+		margin-block-end: var(--yy-space-1, 4px);
+		font-size: 13px;
+		line-height: 1.45;
+		font-weight: 600;
+		color: var(--yy-text-muted, var(--grey-400));
+
+		.icon {
+			margin: 0;
+		}
 	}
 
 	.none {
@@ -1527,6 +1566,7 @@ h2 .button {
 		&.button--mark-done {
 			background-color: transparent;
 			box-shadow: none;
+			justify-content: center;
 
 			// bright brand green with fixed dark text passes contrast in both themes
 			&.is-pending {
@@ -1540,6 +1580,92 @@ h2 .button {
 			}
 		}
 	}
+}
+
+// prime-tasks: the actions sit in one Yuyu side card. "Mark task done" stays the one full-width
+// button on top; every other action is a quiet list row under an overline section label.
+.task-actions {
+	background-color: var(--yy-bg-canvas, var(--white));
+	border: 1px solid var(--yy-border, var(--grey-200));
+	border-radius: var(--yy-radius-lg, 16px);
+	padding: var(--yy-space-3, 12px);
+}
+
+.task-actions__group + .task-actions__group {
+	border-block-start: 1px solid var(--yy-border, var(--grey-200));
+	margin-block-start: var(--yy-space-2, 8px);
+	padding-block-start: var(--yy-space-2, 8px);
+}
+
+.task-actions__label {
+	display: block;
+	padding: var(--yy-space-1, 4px) var(--yy-space-3, 12px);
+	font-family: var(--yy-font-body);
+	font-size: 13px;
+	line-height: 1.3;
+	font-weight: 700;
+	letter-spacing: .06em;
+	text-transform: uppercase;
+	color: var(--yy-text-muted, var(--grey-500));
+}
+
+// Three classes deep so the rows outrank yuyu.scss's `:root:root .button.is-text` pill.
+.action-buttons .task-actions .button.task-action {
+	inline-size: 100%;
+	min-block-size: 40px;
+	margin: 0;
+	padding: var(--yy-space-2, 8px) var(--yy-space-3, 12px);
+	gap: 10px;
+	justify-content: flex-start;
+	text-align: start;
+	background-color: transparent;
+	border: 0;
+	border-radius: var(--yy-radius-md, 12px);
+	color: var(--yy-text-secondary, var(--text));
+	font-size: 14px;
+	font-weight: 500;
+	text-decoration: none;
+
+	:deep(.icon) {
+		color: var(--yy-text-muted, var(--grey-500));
+		inline-size: 1rem;
+		margin: 0;
+	}
+
+	&:hover,
+	&:focus-visible {
+		background-color: var(--yy-bg-subtle, var(--grey-50));
+		color: var(--yy-text, var(--text-strong));
+
+		:deep(.icon) {
+			color: var(--yy-text, var(--text-strong));
+		}
+	}
+
+	&.is-danger {
+		border: 0;
+		background-color: transparent;
+		color: var(--yy-danger-fg, var(--danger));
+
+		:deep(.icon) {
+			color: inherit;
+		}
+
+		&:hover,
+		&:focus-visible {
+			background-color: var(--yy-danger-bg, var(--grey-50));
+			color: var(--yy-danger-fg, var(--danger));
+		}
+	}
+}
+
+.task-actions .button--mark-done {
+	margin-block-end: var(--yy-space-2, 8px);
+}
+
+.action-buttons :deep(.created) {
+	margin-block-start: var(--yy-space-3, 12px);
+	padding-inline: var(--yy-space-2, 8px);
 }
 
 // keep the title clear of the modal's fixed close button
@@ -1561,6 +1687,21 @@ h2 .button {
 	}
 }
 
+// prime-tasks: section headings (Description, Comments, Attachments, …) are flat Yuyu h4s,
+// not page-sized h2s
+.detail-content :deep(.task-section-title) {
+	display: flex;
+	align-items: center;
+	gap: var(--yy-space-2, 8px);
+	font-size: 20px;
+	line-height: 1.25;
+	margin-block-end: var(--yy-space-3, 12px);
+
+	.icon {
+		color: var(--yy-text-muted, var(--grey-400));
+	}
+}
+
 .checklist-summary {
 	padding-inline-start: .25rem;
 }
@@ -1569,15 +1710,6 @@ h2 .button {
 	@media print {
 		inline-size: 100% !important;
 	}
-}
-
-.action-heading {
-	text-transform: uppercase;
-	color: var(--grey-700);
-	font-size: .75rem;
-	font-weight: 700;
-	margin: .5rem 0;
-	display: inline-block;
 }
 
 .scroll-to-comments-button {

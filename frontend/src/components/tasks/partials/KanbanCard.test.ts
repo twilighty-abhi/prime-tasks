@@ -303,4 +303,76 @@ describe('KanbanCard', () => {
 		expect(observer.observing).toBe(false)
 		expect(attachments.fetchAttachmentUrl).not.toHaveBeenCalled()
 	})
+	// prime-tasks: the card follows Yuyu's event card (canvas, hairline footer, colour as a band).
+	describe('Yuyu card', () => {
+		const future = new Date(Date.now() + 4 * 86_400_000).toISOString()
+
+		it('shows the task colour as a slim band, not as a fill', () => {
+			const wrapper = mountCard(normalizeTask({id: 9, project_id: 1, title: 'Coloured', hex_color: 'e8445a'}))
+
+			expect(wrapper.get('.task').attributes('style') ?? '').not.toContain('background-color')
+			expect(wrapper.get('.kanban-card__band').attributes('style')).toMatch(/background-color: (#e8445a|rgb\(232, 68, 90\))/)
+		})
+
+		it('shows no band for a task without a colour', () => {
+			const wrapper = mountCard(normalizeTask({id: 9, project_id: 1, title: 'Plain'}))
+
+			expect(wrapper.find('.kanban-card__band').exists()).toBe(false)
+		})
+
+		it('sets the title in its own heading', () => {
+			const wrapper = mountCard(normalizeTask({id: 9, project_id: 1, title: 'Draft the narrative'}))
+
+			expect(wrapper.get('h3.kanban-card__title').find('router-link-stub').exists()).toBe(true)
+		})
+
+		// prime-tasks: compact cards: no separate identifier row; the identifier leads the footer.
+		it('puts the identifier at the start of the footer, not in a row of its own', () => {
+			const wrapper = mountCard(normalizeTask({id: 9, index: 4, project_id: 1, title: 'Due soon', due_date: future}))
+
+			expect(wrapper.find('.kanban-card__top').exists()).toBe(false)
+			const footer = wrapper.get('.footer')
+			expect(footer.element.firstElementChild?.classList.contains('task-id')).toBe(true)
+			expect(footer.get('.task-id').text()).toContain('#4')
+			expect(footer.find('.due-date').exists()).toBe(true)
+		})
+
+		it('keeps the footer, with the identifier, on a card with no other meta', () => {
+			const wrapper = mountCard(normalizeTask({id: 9, index: 4, project_id: 1, title: 'Bare'}))
+
+			expect(wrapper.get('.footer .task-id').text()).toContain('#4')
+		})
+
+		it('shows the Done chip next to the title, not in a row of its own', () => {
+			const wrapper = mountCard(normalizeTask({id: 9, index: 4, project_id: 1, title: 'Finished', done: true}))
+
+			expect(wrapper.find('.kanban-card__heading .kanban-card__done').exists()).toBe(true)
+		})
+
+		it('does not mark the due date icon as a footer indicator icon', () => {
+			const wrapper = mountCard(normalizeTask({id: 9, project_id: 1, title: 'Due soon', due_date: future}))
+
+			// e2e checks `.footer .icon svg` to find the description indicator
+			expect(wrapper.find('.footer .due-date .icon').exists()).toBe(false)
+		})
+
+		it('puts labels and priority in a chip row above the footer', () => {
+			const wrapper = mountCard(normalizeTask({id: 9, project_id: 1, title: 'Chips', priority: 4}))
+
+			expect(wrapper.find('.kanban-card__chips labels-stub').exists()).toBe(true)
+			expect(wrapper.find('.kanban-card__chips priority-label-stub').exists()).toBe(true)
+		})
+
+		it('marks a done card so it reads as done', () => {
+			const wrapper = mountCard(normalizeTask({id: 9, project_id: 1, title: 'Finished', done: true}))
+
+			expect(wrapper.get('.task').classes()).toContain('kanban-card--done')
+		})
+
+		it('does not mark an open card as done', () => {
+			const wrapper = mountCard(normalizeTask({id: 9, project_id: 1, title: 'Open', done: false}))
+
+			expect(wrapper.get('.task').classes()).not.toContain('kanban-card--done')
+		})
+	})
 })

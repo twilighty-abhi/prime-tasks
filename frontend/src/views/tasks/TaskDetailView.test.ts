@@ -276,3 +276,48 @@ describe('TaskDetailView in a trashed project', () => {
 		expect(document.activeElement).toBe(wrapper.element)
 	})
 })
+
+// prime-tasks: the action sidebar is one Yuyu side card: "Mark task done" on top as the one
+// full-width button, then quiet list rows under overline section labels.
+describe('TaskDetailView action card', () => {
+	beforeEach(() => {
+		sdk.tasksRead.mockReset()
+		sdk.tasksRead.mockImplementation(async ({path}: {path: {task: number}}) => ({data: serverTask(path.task)}))
+	})
+
+	it('groups every action in one card with the done button first', async () => {
+		const wrapper = await mountDetail()
+		const cards = wrapper.findAll('.action-buttons .task-actions')
+		expect(cards).toHaveLength(1)
+		const card = cards[0]!
+
+		const buttons = card.findAll('x-button-stub')
+		expect(buttons[0]!.classes()).toContain('button--mark-done')
+		// every upstream action stays (time tracking is a pro feature, off here), and every one
+		// but "done" is a quiet row
+		const rows = buttons.slice(1)
+		expect(rows).toHaveLength(16)
+		for (const row of rows) {
+			expect(row.classes()).toContain('task-action')
+			expect(row.attributes('variant')).toBe('tertiary')
+		}
+
+		const subscription = card.find('.task-action-subscription')
+		expect(subscription.exists()).toBe(true)
+		expect(subscription.classes()).toContain('task-action')
+
+		expect(card.findAll('.task-actions__label').map(l => l.text())).toEqual([
+			'task.detail.organization',
+			'task.detail.management',
+			'task.detail.dateAndTime',
+		])
+	})
+
+	it('keeps the delete row marked as danger', async () => {
+		const wrapper = await mountDetail()
+		const rows = wrapper.findAll('.task-actions x-button-stub.task-action')
+		const del = rows[rows.length - 1]!
+		expect(del.attributes('icon')).toBe('trash-alt')
+		expect(del.classes()).toContain('is-danger')
+	})
+})
