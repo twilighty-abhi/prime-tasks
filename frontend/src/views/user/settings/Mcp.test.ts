@@ -41,7 +41,7 @@ beforeEach(() => {
 	sdk.mcpInfo.mockResolvedValue({data: {
 		endpoint: 'https://example.com/api/v2/mcp',
 		routes: {},
-		presets: {read_only: {}, typed: {tasks: ['update']}, full: {'*': '*'}},
+		presets: {read_only: {}, typed: {tasks: ['update']}, full: {'*': '*'}, agent_safe: {mcp: ['access'], tasks: ['claim', 'update']}},
 	} satisfies ConnectionSettings})
 })
 afterEach(() => wrapper?.unmount())
@@ -75,7 +75,11 @@ describe('MCP settings', () => {
 		expect(wrapper.findComponent({name: 'McpClientGuide'}).exists()).toBe(false)
 		await wrapper.findAll('button').find(b => b.text() === 'Create a token')!.trigger('click')
 		const form = wrapper.findComponent({name: 'ApiTokenForm'})
-		expect(form.attributes('initialscopes')).toBe('tasks:update')
+		// prime-tasks A2: Agent (safe) comes first and is preselected.
+		expect(form.attributes('initialscopes')).toBe('mcp:access,tasks:claim,tasks:update')
+		const presets: ApiTokenPreset[] = form.props('presets')
+		expect(presets[0]).toEqual({id: 'agentSafe', groups: {mcp: ['access'], tasks: ['claim', 'update']}, label: 'Agent (safe)'})
+		expect(presets.map(p => p.id)).toEqual(['agentSafe', 'readOnly', 'typed', 'fullAccess'])
 		expect(form.props('presets')).toContainEqual({id: 'fullAccess', groups: {'*': '*'}})
 		form.vm.$emit('created', {id: 3, token: 'tk_secret'})
 		await flushPromises()
@@ -89,7 +93,7 @@ describe('MCP settings', () => {
 
 	it.each<ConnectionSettings>([
 		{},
-		{presets: {typed: {tasks: null}, read_only: {tasks: null}, full: {'*': 'unexpected'}}},
+		{presets: {typed: {tasks: null}, read_only: {tasks: null}, full: {'*': 'unexpected'}, agent_safe: {tasks: null}}},
 	])('handles omitted settings and empty permission groups: %j', async settings => {
 		sdk.mcpInfo.mockResolvedValueOnce({data: settings})
 		mountSettings()
