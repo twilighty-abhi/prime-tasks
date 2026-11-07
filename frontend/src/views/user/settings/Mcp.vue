@@ -46,14 +46,14 @@ function presetGroups(groups: Record<string, string | string[] | null> = {}): Ap
 	]))
 }
 
-// prime-tasks A2: Agent (safe) comes first and is preselected.
+// prime-tasks A2: Agent (safe) sits after upstream's typed preset, which stays preselected.
 const presets = computed<ApiTokenPreset[]>(() => info.value ? [
-	{id: 'agentSafe', groups: presetGroups(info.value.presets?.agent_safe), label: t('user.settings.mcp.agentSafePreset')},
 	{id: 'readOnly', groups: presetGroups(info.value.presets?.read_only)},
 	{id: 'typed', groups: presetGroups(info.value.presets?.typed), label: t('user.settings.mcp.typedPreset')},
+	{id: 'agentSafe', groups: presetGroups(info.value.presets?.agent_safe), label: t('user.settings.mcp.agentSafePreset')},
 	{id: 'fullAccess', groups: presetGroups(info.value.presets?.full)},
 ] : [])
-const initialScopes = computed(() => Object.entries(info.value?.presets?.agent_safe ?? {})
+const initialScopes = computed(() => Object.entries(info.value?.presets?.typed ?? {})
 	.flatMap(([group, permissions]) => (permissions ?? []).map(permission => `${group}:${permission}`))
 	.join(','))
 

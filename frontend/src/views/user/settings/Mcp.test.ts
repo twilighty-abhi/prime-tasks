@@ -75,11 +75,11 @@ describe('MCP settings', () => {
 		expect(wrapper.findComponent({name: 'McpClientGuide'}).exists()).toBe(false)
 		await wrapper.findAll('button').find(b => b.text() === 'Create a token')!.trigger('click')
 		const form = wrapper.findComponent({name: 'ApiTokenForm'})
-		// prime-tasks A2: Agent (safe) comes first and is preselected.
-		expect(form.attributes('initialscopes')).toBe('mcp:access,tasks:claim,tasks:update')
+		// prime-tasks A2: Agent (safe) is offered; the upstream typed preset stays preselected.
+		expect(form.attributes('initialscopes')).toBe('tasks:update')
 		const presets: ApiTokenPreset[] = form.props('presets')
-		expect(presets[0]).toEqual({id: 'agentSafe', groups: {mcp: ['access'], tasks: ['claim', 'update']}, label: 'Agent (safe)'})
-		expect(presets.map(p => p.id)).toEqual(['agentSafe', 'readOnly', 'typed', 'fullAccess'])
+		expect(presets[2]).toEqual({id: 'agentSafe', groups: {mcp: ['access'], tasks: ['claim', 'update']}, label: 'Agent (safe)'})
+		expect(presets.map(p => p.id)).toEqual(['readOnly', 'typed', 'agentSafe', 'fullAccess'])
 		expect(form.props('presets')).toContainEqual({id: 'fullAccess', groups: {'*': '*'}})
 		form.vm.$emit('created', {id: 3, token: 'tk_secret'})
 		await flushPromises()
