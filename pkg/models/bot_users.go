@@ -129,6 +129,11 @@ func (b *BotUser) Update(s *xorm.Session, a web.Auth) error {
 		return err
 	}
 	if existing.Status != oldStatus {
+		if existing.Status != user.StatusActive {
+			if err = ReleaseBotClaims(s, existing, "revoked"); err != nil {
+				return err
+			}
+		}
 		events.DispatchOnCommit(s, &BotStatusChangedEvent{
 			Bot:       existing,
 			Doer:      doer,

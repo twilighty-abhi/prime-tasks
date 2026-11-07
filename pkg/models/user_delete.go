@@ -173,6 +173,12 @@ func deleteUserInViews(s *xorm.Session, u *user.User, views []*ProjectView) (err
 		}
 	}
 
+	if u.IsBot() {
+		if err = ReleaseBotClaims(s, u, "removed"); err != nil {
+			return err
+		}
+	}
+
 	projectsToDelete, err := getProjectsToDelete(s, u)
 	if err != nil {
 		return err
