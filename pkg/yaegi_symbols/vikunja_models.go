@@ -437,6 +437,7 @@ func init() {
 		"RelationKindRelated":                              reflect.ValueOf(models.RelationKindRelated),
 		"RelationKindSubtask":                              reflect.ValueOf(models.RelationKindSubtask),
 		"RelationKindUnknown":                              reflect.ValueOf(models.RelationKindUnknown),
+		"ReleaseBotClaims":                                 reflect.ValueOf(models.ReleaseBotClaims),
 		"ReminderRelationDueDate":                          reflect.ValueOf(models.ReminderRelationDueDate),
 		"ReminderRelationEndDate":                          reflect.ValueOf(models.ReminderRelationEndDate),
 		"ReminderRelationStartDate":                        reflect.ValueOf(models.ReminderRelationStartDate),
