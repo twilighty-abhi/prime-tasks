@@ -1570,7 +1570,7 @@ export const projectsDuplicate = <ThrowOnError extends boolean = true>(options: 
 /**
  * List who has access to a project
  *
- * Returns everyone with access to the project and why: the owner, the users and teams it is shared with, and what it inherits from its parent projects (source parent, managed on that parent). Requires read access; link shares get 403. Not paginated: every entry comes on the first page. Email addresses are never included.
+ * Returns everyone with access to the project and why: the owner, the users and teams it is shared with, and what it inherits from its parent projects (source parent, managed on that parent). Any user who can read the project may call this; link shares get 403. Not paginated: every entry comes on the first page. Email addresses are never included.
  */
 export const projectAccessList = <ThrowOnError extends boolean = true>(options: Options<ProjectAccessListData, ThrowOnError>): RequestResult<ProjectAccessListResponses, ProjectAccessListErrors, ThrowOnError> => (options.client ?? client).get<ProjectAccessListResponses, ProjectAccessListErrors, ThrowOnError>({
     security: [{
@@ -2751,7 +2751,7 @@ export const taskAssigneesBulk = <ThrowOnError extends boolean = true>(options: 
 /**
  * Share the project with a user and assign them
  *
- * Assigns a user to the task. If they can't see the task's project yet, the project is first shared with them with read & write permission; both happen in one transaction. Only admins of the task's project may call this; anyone else gets 403 and nothing is shared. The response says whether the project was shared.
+ * Assigns a user to the task. If they can't see the task's project yet, the project is first shared with them with read & write permission; both happen in one transaction. Requires admin permission on the task's project; anyone else gets 403 and nothing is shared. The response says whether the project was shared.
  */
 export const taskAssigneesShareAndAssign = <ThrowOnError extends boolean = true>(options: Options<TaskAssigneesShareAndAssignData, ThrowOnError>): RequestResult<TaskAssigneesShareAndAssignResponses, TaskAssigneesShareAndAssignErrors, ThrowOnError> => (options.client ?? client).post<TaskAssigneesShareAndAssignResponses, TaskAssigneesShareAndAssignErrors, ThrowOnError>({
     security: [{

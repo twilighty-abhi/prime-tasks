@@ -36,8 +36,8 @@ func RegisterProjectAccessRoutes(api huma.API) {
 		OperationID: "project-access-list",
 		Summary:     "List who has access to a project",
 		Description: "Returns everyone with access to the project and why: the owner, the users and teams it is shared with, " +
-			"and what it inherits from its parent projects (source parent, managed on that parent). Requires read access; " +
-			"link shares get 403. Not paginated: every entry comes on the first page. Email addresses are never included.",
+			"and what it inherits from its parent projects (source parent, managed on that parent). Any user who can read the " +
+			"project may call this; link shares get 403. Not paginated: every entry comes on the first page. Email addresses are never included.",
 		Method: http.MethodGet,
 		Path:   "/projects/{project}/access",
 		Tags:   []string{"sharing"},
