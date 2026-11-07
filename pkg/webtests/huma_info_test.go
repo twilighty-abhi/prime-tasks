@@ -91,3 +91,31 @@ func TestHumaInfoLegalLinks(t *testing.T) {
 		},
 	}, legal["links"])
 }
+
+// prime-tasks G1: /api/v2/info tells the login page whether to fold the username and
+// password form under the OpenID provider buttons. Off unless auth.local.foldonlogin is set.
+func TestHumaInfoFoldLocalLogin(t *testing.T) {
+	e, err := setupTestEnv()
+	require.NoError(t, err)
+
+	read := func(t *testing.T) map[string]any {
+		t.Helper()
+		rec := humaRequest(t, e, http.MethodGet, "/api/v2/info", "", "", "")
+		require.Equal(t, http.StatusOK, rec.Code, "body: %s", rec.Body.String())
+		var body map[string]any
+		require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &body))
+		return body
+	}
+
+	t.Run("off by default", func(t *testing.T) {
+		body := read(t)
+		require.Contains(t, body, "fold_local_login")
+		assert.Equal(t, false, body["fold_local_login"])
+	})
+	t.Run("on when the flag is set", func(t *testing.T) {
+		config.AuthLocalFoldOnLogin.Set(true)
+		t.Cleanup(func() { config.AuthLocalFoldOnLogin.Set(false) })
+
+		assert.Equal(t, true, read(t)["fold_local_login"])
+	})
+}
