@@ -47,6 +47,7 @@ var exposedOperations = map[string]toolTier{
 	"labels-list":                     typedTool,
 	"labels-read":                     typedTool,
 	"labels-update":                   typedTool,
+	"my-work":                         typedTool,
 	"notifications-delete-all":        catalogTool,
 	"notifications-list":              catalogTool,
 	"notifications-mark-all-read":     catalogTool,

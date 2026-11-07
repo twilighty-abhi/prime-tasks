@@ -1226,6 +1226,163 @@ export type MigrationStartedBodyBody = {
     readonly message?: string;
 };
 
+export type MyWorkProject = {
+    /**
+     * The project's id.
+     */
+    id?: number;
+    /**
+     * The project's title.
+     */
+    title?: string;
+};
+
+export type MyWorkTask = {
+    /**
+     * The users assigned to this task. Read-only here; use the task-assignee endpoints to change assignments.
+     */
+    readonly assignees?: Array<User> | null;
+    /**
+     * The task's attachments. Read-only here; use the attachment endpoints to add or remove them.
+     */
+    readonly attachments?: Array<TaskAttachment> | null;
+    /**
+     * The bucket the task is in. Only populated when the task is accessed via a view with buckets. To move a task between buckets, the new bucket must be in the same view as the old one.
+     */
+    bucket_id?: number;
+    /**
+     * The task's buckets across all views. Only present when requested via the buckets expand option.
+     */
+    readonly buckets?: Array<Bucket> | null;
+    /**
+     * The number of comments on this task. Only present when requested via the comment_count expand option.
+     */
+    readonly comment_count?: number;
+    /**
+     * The task's first 50 comments. Only present when requested via the comments expand option.
+     */
+    readonly comments?: Array<TaskComment> | null;
+    /**
+     * The id of the attachment used as this task's cover image, or 0 for none.
+     */
+    cover_image_attachment_id?: number;
+    /**
+     * When this task was created. Set by the server; ignored on write.
+     */
+    readonly created?: string;
+    /**
+     * The user who created this task. Set by the server.
+     */
+    readonly created_by?: User;
+    /**
+     * When this task was soft-deleted. Soft-deleted tasks are kept for 30 days before they are removed permanently.
+     */
+    readonly deleted_at?: string;
+    /**
+     * The user who moved this task to the trash. Only present on soft-deleted tasks, and absent there for tasks deleted before this was recorded.
+     */
+    readonly deleted_by?: User;
+    description?: string;
+    done?: boolean;
+    /**
+     * When the task was marked as done. Set by the server; ignored on write.
+     */
+    readonly done_at?: string;
+    due_date?: string;
+    end_date?: string;
+    /**
+     * The task color as a hex string without the leading '#'.
+     */
+    hex_color?: string;
+    /**
+     * The unique, numeric id of this task.
+     */
+    readonly id?: number;
+    /**
+     * The textual task identifier, derived from the project identifier and the task index (e.g. "PROJ-12").
+     */
+    readonly identifier?: string;
+    /**
+     * The per-project task index, assigned by the server.
+     */
+    readonly index?: number;
+    /**
+     * Whether the requesting user has favorited this task. Per-user, so it differs between callers.
+     */
+    is_favorite?: boolean;
+    /**
+     * Whether the task is unread for the requesting user. Only present when requested via the is_unread expand option.
+     */
+    readonly is_unread?: boolean;
+    /**
+     * The labels on this task. Read-only here; use the label-task endpoints to add or remove labels.
+     */
+    readonly labels?: Array<Label> | null;
+    /**
+     * How far the task is from done, between 0 and 1.
+     */
+    percent_done?: number;
+    /**
+     * The task's position, saved per view. Only non-zero when the task is fetched through a view endpoint; use the task-position endpoint to change it.
+     */
+    readonly position?: number;
+    /**
+     * The task's stored position in each view of its project. Only present in create and duplicate responses.
+     */
+    readonly positions?: Array<TaskPosition> | null;
+    priority?: number;
+    /**
+     * The project the task is in.
+     */
+    readonly project?: MyWorkProject;
+    /**
+     * The id of the project this task belongs to. On create it is taken from the URL; on update, setting it to a different project moves the task (requires write access to the target project).
+     */
+    project_id?: number;
+    /**
+     * Reactions on this task. Only present when requested via the reactions expand option.
+     */
+    readonly reactions?: {
+        [key: string]: Array<User> | null;
+    };
+    /**
+     * Related tasks grouped by relation kind. Read-only here; use the task-relation endpoints to change relations.
+     */
+    readonly related_tasks?: {
+        [key: string]: Array<Task> | null;
+    };
+    reminders?: Array<TaskReminder> | null;
+    /**
+     * The interval in seconds this task repeats. When set, marking the task done re-opens it and bumps its reminders and due date by this amount.
+     */
+    repeat_after?: number;
+    /**
+     * How the task repeats when marked done: 0 = after repeat_after seconds, 1 = monthly (ignores repeat_after), 2 = from the current date rather than the last set date.
+     */
+    repeat_mode?: number;
+    start_date?: string;
+    /**
+     * The requesting user's subscription to this task. Read-only here; use the subscription endpoints to change it. Only present when reading a single task.
+     */
+    readonly subscription?: Subscription;
+    /**
+     * The number of time entries on this task. Only present when requested via the time_entries_count expand option.
+     */
+    readonly time_entries_count?: number;
+    /**
+     * The task title. This is what you'll see in the project.
+     */
+    title?: string;
+    /**
+     * When this task was last updated. Set by the server; ignored on write.
+     */
+    readonly updated?: string;
+    /**
+     * Link to the task in the web interface (service.publicurl + tasks/<id>).
+     */
+    readonly url?: string;
+};
+
 export type OpenIdAuthInfo = {
     enabled?: boolean;
     providers?: Array<Provider> | null;
@@ -1376,6 +1533,18 @@ export type PaginatedLinkedIdentity = {
      */
     readonly $schema?: string;
     items?: Array<LinkedIdentity> | null;
+    page?: number;
+    per_page?: number;
+    total?: number;
+    total_pages?: number;
+};
+
+export type PaginatedMyWorkTask = {
+    /**
+     * A URL to the JSON Schema for this object.
+     */
+    readonly $schema?: string;
+    items?: Array<MyWorkTask> | null;
     page?: number;
     per_page?: number;
     total?: number;
@@ -4690,6 +4859,52 @@ export type MigrationMigrateBodyWritable = {
     state?: string;
 };
 
+export type MyWorkTaskWritable = {
+    /**
+     * The bucket the task is in. Only populated when the task is accessed via a view with buckets. To move a task between buckets, the new bucket must be in the same view as the old one.
+     */
+    bucket_id?: number;
+    /**
+     * The id of the attachment used as this task's cover image, or 0 for none.
+     */
+    cover_image_attachment_id?: number;
+    description?: string;
+    done?: boolean;
+    due_date?: string;
+    end_date?: string;
+    /**
+     * The task color as a hex string without the leading '#'.
+     */
+    hex_color?: string;
+    /**
+     * Whether the requesting user has favorited this task. Per-user, so it differs between callers.
+     */
+    is_favorite?: boolean;
+    /**
+     * How far the task is from done, between 0 and 1.
+     */
+    percent_done?: number;
+    priority?: number;
+    /**
+     * The id of the project this task belongs to. On create it is taken from the URL; on update, setting it to a different project moves the task (requires write access to the target project).
+     */
+    project_id?: number;
+    reminders?: Array<TaskReminder> | null;
+    /**
+     * The interval in seconds this task repeats. When set, marking the task done re-opens it and bumps its reminders and due date by this amount.
+     */
+    repeat_after?: number;
+    /**
+     * How the task repeats when marked done: 0 = after repeat_after seconds, 1 = monthly (ignores repeat_after), 2 = from the current date rather than the last set date.
+     */
+    repeat_mode?: number;
+    start_date?: string;
+    /**
+     * The task title. This is what you'll see in the project.
+     */
+    title?: string;
+};
+
 export type OverviewWritable = {
     [key: string]: never;
 };
@@ -4768,6 +4983,14 @@ export type PaginatedLinkSharingWritable = {
 
 export type PaginatedLinkedIdentityWritable = {
     items?: Array<unknown> | null;
+    page?: number;
+    per_page?: number;
+    total?: number;
+    total_pages?: number;
+};
+
+export type PaginatedMyWorkTaskWritable = {
+    items?: Array<MyWorkTaskWritable> | null;
     page?: number;
     per_page?: number;
     total?: number;
@@ -7689,6 +7912,44 @@ export type MigrationWekanStatusResponses = {
 };
 
 export type MigrationWekanStatusResponse = MigrationWekanStatusResponses[keyof MigrationWekanStatusResponses];
+
+export type MyWorkData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * 1-based page number.
+         */
+        page?: number;
+        /**
+         * Items per page. Defaults to the instance's configured maximum (service.maxitemsperpage, reported as max_items_per_page by /info) and is silently capped at it; asking for more is not an error.
+         */
+        per_page?: number;
+        /**
+         * How rich-text fields are exchanged. See the API description.
+         */
+        format?: 'html' | 'markdown';
+    };
+    url: '/my-work';
+};
+
+export type MyWorkErrors = {
+    /**
+     * Error
+     */
+    default: VikunjaErrorModel;
+};
+
+export type MyWorkError = MyWorkErrors[keyof MyWorkErrors];
+
+export type MyWorkResponses = {
+    /**
+     * OK
+     */
+    200: PaginatedMyWorkTask;
+};
+
+export type MyWorkResponse = MyWorkResponses[keyof MyWorkResponses];
 
 export type NotificationsDeleteAllData = {
     body?: never;
