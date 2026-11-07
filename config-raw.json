@@ -861,6 +861,11 @@
                                             "key": "requireavailability",
                                             "default_value": "false",
                                             "comment": "This option requires the OpenID Connect provider to be available during Vikunja startup. When set to `true`, Vikunja will crash if it cannot connect to the provider during initialization, allowing container orchestrators like Kubernetes to handle the failure by restarting the application. This is useful in environments where you want to ensure all authentication providers are available before the application starts serving requests. Allowed value is either `true` or `false`."
+                                        },
+                                        {
+                                            "key": "usernamefromemail",
+                                            "default_value": "false",
+                                            "comment": "When `true`, users created through this provider get their `preferred_username` claim as username, or the local part of their email address (`abhiram@example.org` becomes `abhiram`) when the provider sends none, as Google does. A taken username gets a numeric suffix (`abhiram2`, `abhiram3`). When `false`, a missing or taken `preferred_username` gives a random username. Existing users are never renamed. Allowed value is either `true` or `false`."
                                         }
                                     ]
                                 }

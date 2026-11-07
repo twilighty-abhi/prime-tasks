@@ -68,7 +68,10 @@ type Provider struct {
 	UsernameFallback    bool   `json:"username_fallback"`
 	ForceUserInfo       bool   `json:"force_user_info"`
 	RequireAvailability bool   `json:"-"`
-	ClientSecret        string `json:"-"`
+	// UsernameFromEmail names new users after preferred_username or the email
+	// local part, with a numeric suffix on clashes, instead of a random name.
+	UsernameFromEmail bool   `json:"-"`
+	ClientSecret      string `json:"-"`
 	// RP-Initiated Logout endpoint, cached at init so logout never fetches.
 	// Exported so it survives the gob keyvalue round-trip (gob skips unexported
 	// fields like openIDProvider); json:"-" keeps it out of /info.
@@ -530,9 +533,15 @@ func getOrCreateUser(s *xorm.Session, cl *claims, provider *Provider, idToken *o
 
 	if !alreadyCreatedFromIssuer && !fallbackMatchFound {
 
+		var username string
+		username, err = newUserUsername(s, cl, provider)
+		if err != nil {
+			return nil, false, err
+		}
+
 		// If no user exists, create one with the preferred username if it is not already taken
 		uu := &user.User{
-			Username:           strings.ReplaceAll(cl.PreferredUsername, " ", "-"),
+			Username:           username,
 			Email:              cl.Email,
 			Name:               cl.Name,
 			Status:             user.StatusActive,

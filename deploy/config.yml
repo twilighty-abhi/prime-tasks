@@ -67,3 +67,4 @@ auth:
     #     scope: "openid email profile"
     #     emailfallback: true
     #     usernamefallback: true
+    #     usernamefromemail: true
