@@ -100,51 +100,7 @@ the browser differs from the registered URI (`http` vs `https`, `www.`, a port).
 
 ## Migrating from an existing Vikunja
 
-prime-tasks runs Vikunja's normal migrations on startup. The source instance must be on the same or an
-older Vikunja version than the one prime-tasks is based on (see PRIME.md). Downgrades are not supported.
-Stop the old instance before you start, so nothing writes to it during the copy.
-
-### From Postgres (keep the data, move it into this stack)
-
-```bash
-# on the old host
-pg_dump -h <old-host> -U <old-user> -d <old-db> -Fc > vikunja-old.dump
-tar -czf files-old.tar.gz -C <old files dir> .
-
-# on the VM, with the stack created but the app stopped
-cd /opt/prime-tasks/deploy
-docker compose up -d db files-permissions
-docker compose stop prime-tasks
-docker compose exec -T db pg_restore -U vikunja -d vikunja --no-owner --clean --if-exists < vikunja-old.dump
-docker run --rm -i -v prime-tasks-files:/files busybox:1.37 tar -xzf - -C /files < files-old.tar.gz
-docker compose run --rm files-permissions
-docker compose up -d
-```
-
-To keep using an existing Postgres server in place instead of the bundled one, remove the `db` service and its
-`depends_on` entry, then set `database.host`, `database.user` and `database.database` in `config.yml` (password via
-`POSTGRES_PASSWORD` in `.env`). Take a `pg_dump` first: the first start runs migrations against that database.
-
-### From SQLite or MySQL (`vikunja dump` / `vikunja restore`)
-
-```bash
-# on the old host (adjust for how it runs; this writes a zip with db, files and config)
-vikunja dump --path /tmp
-# or in Docker: docker exec <old-container> /app/vikunja/vikunja dump --path /tmp && docker cp <old-container>:/tmp/<zip> .
-
-# on the VM: start a fresh, empty stack, then restore into it
-cd /opt/prime-tasks/deploy
-docker compose up -d
-docker compose cp vikunja-dump_<date>.zip prime-tasks:/tmp/dump.zip
-docker compose exec -it prime-tasks /app/vikunja/vikunja restore --preserve-config /tmp/dump.zip
-docker compose restart prime-tasks
-```
-
-`--preserve-config` keeps this folder's `config.yml` instead of the old instance's. The restore asks for
-confirmation and needs an empty database.
-
-After any migration: check that people can log in, open a few projects with attachments, and then decide about
-`sql/flip-discoverable.sql` (run it only after a `pg_dump`, and only after telling the team).
+Not needed: there is no old data to import, prime-tasks starts with an empty database.
 
 ## Upgrades
 
