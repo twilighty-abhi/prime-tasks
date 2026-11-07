@@ -5,10 +5,9 @@
 		:class="{
 			'is-loading': showLoading,
 			'draggable': !loadingInternal,
-			'has-light-text': !colorIsDark(color),
-			'has-custom-background-color': color ?? undefined,
+			'kanban-card--done': task.done,
+			'has-cover': coverImageBlobUrl,
 		}"
-		:style="{'background-color': color ?? undefined}"
 		:data-task-id="task.id"
 		:data-project-id="task.project_id"
 		:data-is-overdue="isOverdue || undefined"
@@ -16,20 +15,21 @@
 		@click.ctrl="() => toggleTaskDone(task)"
 		@click.meta="() => toggleTaskDone(task)"
 	>
+		<span
+			v-if="color"
+			class="kanban-card__band"
+			:style="{'background-color': color}"
+			aria-hidden="true"
+		/>
 		<img
 			v-if="coverImageBlobUrl"
 			:src="coverImageBlobUrl"
 			alt=""
-			class="tw:w-full"
+			class="kanban-card__cover"
 		>
-		<div class="p-2">
-			<div class="tw:flex tw:justify-between">
+		<div class="kanban-card__body">
+			<div class="kanban-card__top">
 				<span class="task-id">
-					<Done
-						class="kanban-card__done"
-						:is-done="task.done"
-						variant="small"
-					/>
 					{{ getTaskIdentifier(task) }}
 					<span
 						v-if="showTaskPosition"
@@ -38,25 +38,14 @@
 						{{ task.position }}
 					</span>
 				</span>
-				<span
-					v-if="new Date(task.due_date ?? 0).getTime() > 0"
-					v-tooltip="formatDateLong(task.due_date)"
-					class="due-date"
-				>
-					<span class="icon">
-						<OverdueIndicator v-if="isOverdue" />
-						<Icon
-							v-else
-							:icon="['far', 'calendar-alt']"
-						/>
-					</span>
-					<time :datetime="formatISO(task.due_date)">
-						{{ formatDisplayDate(task.due_date) }}
-					</time>
-				</span>
+				<Done
+					class="kanban-card__done"
+					:is-done="task.done"
+					variant="small"
+				/>
 			</div>
-			
-			<h3>
+
+			<h3 class="kanban-card__title">
 				<RouterLink
 					:to="{ name: 'task.detail', params: {id: task.id} }"
 					class="kanban-card__title-link"
@@ -68,7 +57,7 @@
 					{{ task.title }}
 				</RouterLink>
 			</h3>
-			
+
 			<span
 				v-if="projectTitle"
 				class="project-title"
@@ -81,13 +70,30 @@
 				class="task-progress"
 				:value="task.percent_done * 100"
 			/>
-			<div class="footer">
+
+			<div class="kanban-card__chips">
 				<Labels :labels="task.labels" />
 				<PriorityLabel
 					:priority="task.priority"
 					:done="task.done"
-					class="is-inline-flex is-align-items-center"
 				/>
+			</div>
+
+			<div class="footer">
+				<span
+					v-if="new Date(task.due_date ?? 0).getTime() > 0"
+					v-tooltip="formatDateLong(task.due_date)"
+					class="due-date"
+				>
+					<OverdueIndicator v-if="isOverdue" />
+					<Icon
+						v-else
+						:icon="['far', 'calendar-alt']"
+					/>
+					<time :datetime="formatISO(task.due_date)">
+						{{ formatDisplayDate(task.due_date) }}
+					</time>
+				</span>
 				<span
 					v-if="task.attachments.length > 0"
 					class="icon"
@@ -112,14 +118,15 @@
 					:task="task"
 					class="project-task-icon"
 				/>
-				<AssigneeList
-					v-if="task.assignees.length > 0"
-					:assignees="task.assignees"
-					:avatar-size="24"
-				/>
 				<ChecklistSummary
 					:task="task"
 					class="checklist"
+				/>
+				<AssigneeList
+					v-if="task.assignees.length > 0"
+					class="kanban-card__assignees"
+					:assignees="task.assignees"
+					:avatar-size="24"
 				/>
 			</div>
 		</div>
@@ -148,7 +155,6 @@ import {fetchAttachmentUrl, releaseAttachmentUrl} from '@/helpers/attachments'
 import {ApiError} from '@/client/problem'
 
 import {formatDateLong, formatDisplayDate, formatISO} from '@/helpers/time/formatDate'
-import {colorIsDark} from '@/helpers/color/colorIsDark'
 import {useUpdateTaskMutation} from '@/client/queries/taskMutations'
 import AssigneeList from '@/components/tasks/partials/AssigneeList.vue'
 import {playPopSound} from '@/helpers/playPop'
@@ -309,19 +315,28 @@ onBeforeUnmount(() => {
 </script>
 
 <style lang="scss" scoped>
-$task-background: var(--white);
-
+// prime-tasks: Yuyu card (docs/DESIGN.md §4.7 in Yuyu): canvas, 1px border, r-lg, flat until hover.
 .task {
 	-webkit-touch-callout: none; // iOS Safari
 	user-select: none;
 	cursor: pointer;
-	box-shadow: var(--shadow-xs);
+	position: relative;
 	display: block;
-
-	font-size: .9rem;
-	border-radius: $radius;
-	background: $task-background;
 	overflow: hidden;
+
+	background: var(--yy-bg-canvas, var(--white));
+	border: 1px solid var(--yy-border, var(--grey-200));
+	border-radius: var(--yy-radius-lg, 16px);
+	box-shadow: none;
+	color: var(--yy-text-secondary, var(--text));
+	font-family: var(--yy-font-body, $family-sans-serif);
+	font-size: .875rem;
+	transition: box-shadow var(--yy-duration-hover, 180ms) var(--yy-ease, ease);
+
+	&:hover,
+	&:focus-within {
+		box-shadow: var(--yy-shadow-float, var(--shadow-md));
+	}
 
 	&.loader-container.is-loading::after {
 		inline-size: 1.5rem;
@@ -331,164 +346,216 @@ $task-background: var(--white);
 		border-width: 2px;
 	}
 
-	h3 {
-		font-family: $family-sans-serif;
-		font-size: .85rem;
-		word-break: break-word;
-	}
-
-	.kanban-card__title-link {
-		color: inherit;
-		text-decoration: none;
-	}
-
-	.due-date {
-		float: inline-end;
-		display: flex;
-		align-items: center;
-		padding: 0 .25rem;
-		font-size: .85rem;
-
-		.icon {
-			margin-inline-end: .25rem;
-		}
-
-	}
-
-	&[data-is-overdue] .due-date {
-		color: var(--danger-text);
-	}
-
-	.label-wrapper .tag {
-		margin: .5rem .5rem 0 0;
-	}
-
-	.footer {
-		background: transparent;
-		padding: 0;
-		display: flex;
-		flex-wrap: wrap;
-		align-items: center;
-		gap: .25rem;
-		margin-block-start: .25rem;
-
-		:deep(.checklist-summary) {
-			padding-inline-start: 0;
-		}
-
-		.assignees {
-			display: flex;
-
-			.user {
-				display: inline;
-				margin: 0;
-
-				img {
-					margin: 0;
-				}
-			}
-		}
-
-		.priority-label {
-			font-size: .75rem;
-			padding: 0 .5rem 0 .25rem;
-
-			.icon {
-				block-size: 1rem;
-				padding: 0 .25rem;
-				margin-block-start: 0;
-			}
-		}
-	}
-
-	.footer .icon,
-	.due-date,
-	.priority-label {
-		background: var(--grey-100);
-		border-radius: $radius;
-		padding: 0 .5rem;
-	}
-
-	.task-id, .project-title {
-		color: var(--grey-500);
-		font-size: .8rem;
-		margin-block-end: .25rem;
-		display: flex;
-	}
-
 	&.is-moving {
 		opacity: .5;
 	}
+}
 
-	span {
+// The task's own colour: a slim band along the top edge, like Yuyu's accent band.
+.kanban-card__band {
+	position: absolute;
+	inset-block-start: 0;
+	inset-inline: 0;
+	z-index: 1;
+	block-size: 4px;
+}
+
+.kanban-card__cover {
+	display: block;
+	inline-size: 100%;
+	max-block-size: 180px;
+	object-fit: cover;
+	border-block-end: 1px solid var(--yy-border, var(--grey-200));
+}
+
+.kanban-card__body {
+	display: flex;
+	flex-direction: column;
+	gap: var(--yy-space-2, .5rem);
+	padding: var(--yy-space-3, .75rem) var(--yy-space-4, 1rem) var(--yy-space-3, .75rem);
+}
+
+.has-cover .kanban-card__body,
+.kanban-card__band + .kanban-card__body {
+	padding-block-start: calc(var(--yy-space-3, .75rem) + 2px);
+}
+
+.kanban-card__top {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--yy-space-2, .5rem);
+	min-block-size: 1.25rem;
+}
+
+.task-id,
+.project-title {
+	display: flex;
+	align-items: center;
+	color: var(--yy-text-muted, var(--grey-500));
+	font-size: .75rem;
+	font-weight: 600;
+	letter-spacing: .02em;
+	font-variant-numeric: tabular-nums;
+}
+
+.project-title {
+	margin-block-start: calc(var(--yy-space-1, .25rem) * -1);
+}
+
+// Doubled class to outrank the global :root:root h3 heading rule in theme/yuyu.scss.
+h3.kanban-card__title.kanban-card__title {
+	margin: 0;
+	color: var(--yy-text, var(--text-strong));
+	font-family: var(--yy-font-body, $family-sans-serif);
+	font-size: .9375rem;
+	font-weight: 600 !important; // upstream theme.scss and yuyu.scss force heading weights with !important
+	letter-spacing: 0;
+	line-height: 1.35;
+	text-wrap: pretty;
+	overflow-wrap: anywhere;
+}
+
+.kanban-card__title-link {
+	color: inherit;
+	text-decoration: none;
+
+	&:hover {
+		color: inherit;
+	}
+}
+
+.task-progress {
+	margin: 0;
+	inline-size: 100%;
+	block-size: .375rem;
+}
+
+// Labels and priority as Yuyu chips (pills, 12px, weight 700).
+.kanban-card__chips {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 6px;
+
+	&:empty {
+		display: none;
+	}
+
+	:deep(.label-wrapper) {
+		gap: 6px;
+	}
+
+	:deep(.tag) {
+		block-size: auto;
+		padding: 2px 10px;
+		font-size: .75rem;
+		font-weight: 700;
+		line-height: 1.4;
+	}
+
+	:deep(.priority-label) {
+		display: inline-flex;
+		align-items: center;
+		gap: var(--yy-space-1, .25rem);
+		padding: 2px 10px;
+		border-radius: var(--yy-radius-full, 999px);
+		background: var(--yy-bg-muted, var(--grey-100));
+		color: var(--yy-text-secondary, var(--grey-700));
+		font-size: .75rem;
+		font-weight: 700;
+		line-height: 1.4;
+
+		.icon {
+			block-size: auto;
+			inline-size: auto;
+			padding: 0;
+			font-size: .75rem;
+		}
+	}
+
+	:deep(.priority-label.high-priority) {
+		background: var(--yy-danger-bg, #FEE2E2);
+		color: var(--yy-danger-fg, #B91C1C);
+	}
+
+	:deep(.priority-label.not-so-high) {
+		background: var(--yy-warning-bg, #FEF3C7);
+		color: var(--yy-warning-fg, #92400E);
+	}
+}
+
+// Meta row under a hairline, like the footer of Yuyu's Discover card.
+.footer {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: var(--yy-space-1, .25rem) var(--yy-space-3, .75rem);
+	margin-block-start: var(--yy-space-1, .25rem);
+	padding: var(--yy-space-2, .5rem) 0 0;
+	border-block-start: 1px solid var(--yy-border, var(--grey-200));
+	background: transparent;
+	color: var(--yy-text-muted, var(--grey-500));
+	font-size: .8125rem;
+
+	&:empty {
+		display: none;
+	}
+
+	.icon {
 		inline-size: auto;
+		block-size: auto;
+		color: var(--yy-text-muted, var(--grey-500));
 	}
 
-	&.has-custom-background-color {
-		color: #000000; // pure black, not grey-800: guarantees 4.5:1 at the luminance flip point
-
-		.footer .icon,
-		.due-date,
-		.priority-label {
-			background: hsl(220, 13%, 91%);
-		}
-
-		// beat component-level color: var(--grey-500) so secondary text tracks the guaranteed main text color
-		.task-id, .project-title {
-			color: inherit;
-		}
-
-		.footer :deep(.checklist-summary) {
-			color: inherit;
-		}
+	:deep(.comment-count) {
+		color: var(--yy-text-muted, var(--grey-500));
+		font-size: .8125rem;
 	}
 
-	&.has-light-text {
-		--white: hsla(var(--white-h), var(--white-s), var(--white-l), var(--white-a)) !important;
-		color: var(--white);
+	:deep(.checklist-summary) {
+		padding-inline-start: 0;
+		color: var(--yy-text-muted, var(--grey-500));
+		font-size: .8125rem;
+	}
+}
 
-		.footer .icon,
-		.due-date,
-		.priority-label {
-			background: hsl(215, 27.9%, 16.9%); // grey-800
-		}
+.due-date {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--yy-space-1, .25rem);
+	color: var(--yy-text-secondary, var(--grey-700));
+	font-weight: 600;
+	white-space: nowrap;
 
-		.footer {
-			.icon svg {
-				fill: var(--white);
-			}
-		}
+	.task[data-is-overdue] & {
+		color: var(--yy-danger-fg, var(--danger-text));
+	}
+}
 
-		// beat component-level color: var(--grey-500) so secondary text tracks the guaranteed main text color
-		.task-id, .project-title {
-			color: inherit;
-		}
+.kanban-card__assignees {
+	margin-inline-start: auto;
 
-		.footer :deep(.checklist-summary) {
-			color: inherit;
-		}
+	:deep(.user img) {
+		border-color: var(--yy-bg-canvas, var(--white));
+	}
+}
 
-		// var(--danger-text)/PriorityLabel's --danger-text fail on the dark grey-800 chip bg; brightened red keeps hue/sat, hits >= 4.5:1
-		&[data-is-overdue] .due-date,
-		.priority-label.high-priority {
-			color: hsl(var(--danger-h), var(--danger-s), 68%);
-		}
+// Done cards stay visibly done: the Done chip, plus a quieter title and cover.
+.kanban-card--done {
+	h3.kanban-card__title.kanban-card__title {
+		color: var(--yy-text-muted, var(--grey-500));
+		text-decoration: line-through;
+		text-decoration-thickness: 1px;
+	}
+
+	.kanban-card__cover,
+	.kanban-card__band {
+		opacity: .6;
 	}
 }
 
 .kanban-card__done {
-	margin-inline-end: .25rem;
-}
-
-.task-progress {
-	margin: 8px 0 0;
-	inline-size: 100%;
-	block-size: 0.5rem;
-}
-
-:deep(.comment-count) {
-	background: var(--grey-100);
-	border-radius: $radius;
-	padding: 0.25rem;
+	flex-shrink: 0;
 }
 </style>
