@@ -10473,6 +10473,13 @@ const docTemplate = `{
                 "updated": {
                     "description": "A timestamp when this task was last updated. You cannot change this value.",
                     "type": "string"
+                },
+                "view_buckets": {
+                    "description": "The task's bucket in each kanban view of its project that the requester can see. Filled when reading a single task and in my-work.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.TaskViewBucket"
+                    }
                 }
             }
         },
@@ -10706,6 +10713,20 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "userID": {
+                    "type": "integer"
+                }
+            }
+        },
+        "models.TaskViewBucket": {
+            "type": "object",
+            "properties": {
+                "bucket_id": {
+                    "type": "integer"
+                },
+                "bucket_title": {
+                    "type": "string"
+                },
+                "project_view_id": {
                     "type": "integer"
                 }
             }

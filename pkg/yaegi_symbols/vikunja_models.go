@@ -762,6 +762,7 @@ func init() {
 		"TaskShareAndAssign":                           reflect.ValueOf((*models.TaskShareAndAssign)(nil)),
 		"TaskUnreadStatus":                             reflect.ValueOf((*models.TaskUnreadStatus)(nil)),
 		"TaskUpdatedEvent":                             reflect.ValueOf((*models.TaskUpdatedEvent)(nil)),
+		"TaskViewBucket":                               reflect.ValueOf((*models.TaskViewBucket)(nil)),
 		"TaskWithComments":                             reflect.ValueOf((*models.TaskWithComments)(nil)),
 		"TasksBatchCreatedEvent":                       reflect.ValueOf((*models.TasksBatchCreatedEvent)(nil)),
 		"TasksOverdueEvent":                            reflect.ValueOf((*models.TasksOverdueEvent)(nil)),
