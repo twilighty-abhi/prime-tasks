@@ -33,6 +33,7 @@ func init() {
 		"AuthLdapUserFilter":                         reflect.ValueOf(config.AuthLdapUserFilter),
 		"AuthLdapVerifyTLS":                          reflect.ValueOf(config.AuthLdapVerifyTLS),
 		"AuthLocalEnabled":                           reflect.ValueOf(config.AuthLocalEnabled),
+		"AuthLocalFoldOnLogin":                       reflect.ValueOf(config.AuthLocalFoldOnLogin),
 		"AuthOpenIDEnabled":                          reflect.ValueOf(config.AuthOpenIDEnabled),
 		"AuthOpenIDProviders":                        reflect.ValueOf(config.AuthOpenIDProviders),
 		"AutoJoinTeamRules":                          reflect.ValueOf(config.AutoJoinTeamRules),

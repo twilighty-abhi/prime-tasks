@@ -4298,6 +4298,10 @@ export type VikunjaInfos = {
      */
     enabled_pro_features?: Array<string> | null;
     /**
+     * Whether auth.local.foldonlogin is on: when OpenID providers are configured, the login page shows them as the main action and folds the username and password form under a link.
+     */
+    fold_local_login?: boolean;
+    /**
      * The publicly configured frontend URL of this instance.
      */
     frontend_url?: string;
@@ -6198,6 +6202,10 @@ export type VikunjaInfosWritable = {
      * The licensed pro features enabled on this instance.
      */
     enabled_pro_features?: Array<string> | null;
+    /**
+     * Whether auth.local.foldonlogin is on: when OpenID providers are configured, the login page shows them as the main action and folds the username and password form under a link.
+     */
+    fold_local_login?: boolean;
     /**
      * The publicly configured frontend URL of this instance.
      */

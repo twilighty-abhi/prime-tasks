@@ -21,7 +21,8 @@ cd /opt/prime-tasks
 git checkout prime-v2.8.0      # the release tag to run (see PRIME.md, "Releases")
 cd deploy
 cp .env.example .env
-# fill in PRIME_DOMAIN, ACME_EMAIL (required), PRIME_TASKS_VERSION=2.8.0, and two `openssl rand -hex 32` values
+# fill in PRIME_DOMAIN, ACME_EMAIL, PRIME_GOOGLE_CLIENT_ID, PRIME_GOOGLE_CLIENT_SECRET (all required; see
+# "Google sign-in" below), PRIME_TASKS_VERSION=2.8.0, and two `openssl rand -hex 32` values
 chmod 600 .env
 docker compose build --build-arg RELEASE_VERSION=prime-v2.8.0
 docker compose up -d
@@ -42,14 +43,16 @@ release (for example `2.8.0` for tag `prime-v2.8.0`) and use `docker compose pul
 prime-tasks runs without a Vikunja license, so the instance admin panel and `vikunja user set-admin` are not
 available. Nothing below needs them.
 
-- **Accounts.** Registration is off. Create each account on the VM:
+- **Accounts.** Registration is off. People sign in with Google (see [Google sign-in](#google-sign-in)); the
+  first sign-in creates their account. For an account without Google (an agent bot, a contractor), create it on
+  the VM:
 
   ```bash
   docker compose exec prime-tasks /app/vikunja/vikunja user create -u <username> -e <email>
   ```
 
-  It asks for a password (or pass `-p`). Later, Google sign-in can create accounts on first login instead
-  (`auth.openid` in `config.yml`).
+  It asks for a password (or pass `-p`). That person logs in under **Other ways to sign in** on the login page.
+  If an admin-created account's email is later used with Google, Google sign-in logs in to that same account.
 - **Teams.** New users join their teams automatically by email domain (F6): list the domains and team ids under
   `service.autojointeams` in `config.yml` and restart the app. This applies to `user create`, Google sign-in and
   registration alike. Whoever creates a team is its admin and can add or remove members on the Teams page.
@@ -67,53 +70,37 @@ available. Nothing below needs them.
 
 Then install the nightly backup (see [Backups](#backups)).
 
+## Google sign-in
+
+The login page leads with **Sign in with Google**; username and password sit under **Other ways to sign in**
+(`auth.local.foldonlogin` in `config.yml`). The first Google sign-in creates the account, `service.autojointeams`
+adds it to the teams for its email domain, and later sign-ins reuse it.
+
+Redirect URI to register at Google (the frontend sends `<address in the browser>/auth/openid/google`, so it must be
+the address people actually open, the same one as `PRIME_DOMAIN`):
+
+| Where | Authorized redirect URI | Authorized JavaScript origin |
+|---|---|---|
+| Office VM (`PRIME_DOMAIN=tasks.example.org`) | `https://tasks.example.org/auth/openid/google` | `https://tasks.example.org` |
+| Local test on the Mac | `http://localhost:3456/auth/openid/google` | `http://localhost:3456` |
+
+In [Google Cloud Console](https://console.cloud.google.com/):
+
+1. Pick or create a project. **APIs & Services → OAuth consent screen**: user type **Internal** if everyone has an
+   account in the office's Google Workspace (only they can sign in), otherwise **External**; add the `openid`,
+   `email` and `profile` scopes.
+2. **APIs & Services → Credentials → Create credentials → OAuth client ID**, type **Web application**. Add the
+   redirect URI and origin from the table above (both rows if you also test locally).
+3. Copy the client ID and secret into `.env` as `PRIME_GOOGLE_CLIENT_ID` and `PRIME_GOOGLE_CLIENT_SECRET`, then
+   `docker compose up -d`. `docker-compose.yml` hands them to the app as
+   `VIKUNJA_AUTH_OPENID_PROVIDERS_GOOGLE_CLIENTID` / `_CLIENTSECRET`; `config.yml` holds the rest of the provider.
+
+The stack refuses to start while either variable is empty. Google answers `redirect_uri_mismatch` when the address in
+the browser differs from the registered URI (`http` vs `https`, `www.`, a port).
+
 ## Migrating from an existing Vikunja
 
-prime-tasks runs Vikunja's normal migrations on startup. The source instance must be on the same or an
-older Vikunja version than the one prime-tasks is based on (see PRIME.md). Downgrades are not supported.
-Stop the old instance before you start, so nothing writes to it during the copy.
-
-### From Postgres (keep the data, move it into this stack)
-
-```bash
-# on the old host
-pg_dump -h <old-host> -U <old-user> -d <old-db> -Fc > vikunja-old.dump
-tar -czf files-old.tar.gz -C <old files dir> .
-
-# on the VM, with the stack created but the app stopped
-cd /opt/prime-tasks/deploy
-docker compose up -d db files-permissions
-docker compose stop prime-tasks
-docker compose exec -T db pg_restore -U vikunja -d vikunja --no-owner --clean --if-exists < vikunja-old.dump
-docker run --rm -i -v prime-tasks-files:/files busybox:1.37 tar -xzf - -C /files < files-old.tar.gz
-docker compose run --rm files-permissions
-docker compose up -d
-```
-
-To keep using an existing Postgres server in place instead of the bundled one, remove the `db` service and its
-`depends_on` entry, then set `database.host`, `database.user` and `database.database` in `config.yml` (password via
-`POSTGRES_PASSWORD` in `.env`). Take a `pg_dump` first: the first start runs migrations against that database.
-
-### From SQLite or MySQL (`vikunja dump` / `vikunja restore`)
-
-```bash
-# on the old host (adjust for how it runs; this writes a zip with db, files and config)
-vikunja dump --path /tmp
-# or in Docker: docker exec <old-container> /app/vikunja/vikunja dump --path /tmp && docker cp <old-container>:/tmp/<zip> .
-
-# on the VM: start a fresh, empty stack, then restore into it
-cd /opt/prime-tasks/deploy
-docker compose up -d
-docker compose cp vikunja-dump_<date>.zip prime-tasks:/tmp/dump.zip
-docker compose exec -it prime-tasks /app/vikunja/vikunja restore --preserve-config /tmp/dump.zip
-docker compose restart prime-tasks
-```
-
-`--preserve-config` keeps this folder's `config.yml` instead of the old instance's. The restore asks for
-confirmation and needs an empty database.
-
-After any migration: check that people can log in, open a few projects with attachments, and then decide about
-`sql/flip-discoverable.sql` (run it only after a `pg_dump`, and only after telling the team).
+Not needed: there is no old data to import, prime-tasks starts with an empty database.
 
 ## Upgrades
 

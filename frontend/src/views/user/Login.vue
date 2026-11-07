@@ -18,8 +18,32 @@
 
 		<DesktopLogin v-if="isDesktop" />
 
+		<!-- prime-tasks G1: auth.local.foldonlogin leads with the providers and folds the form. -->
+		<div
+			v-if="foldLocalLogin"
+			class="folded-login"
+		>
+			<XButton
+				v-for="(p, k) in openidConnect.providers"
+				:key="k"
+				class="is-fullwidth"
+				@click="redirectToProvider(p)"
+			>
+				{{ $t('user.auth.signInWith', {provider: p.name}) }}
+			</XButton>
+			<button
+				type="button"
+				class="other-ways-toggle"
+				:aria-expanded="showLocalLogin ? 'true' : 'false'"
+				:aria-controls="showLocalLogin ? 'loginform' : undefined"
+				@click="showLocalLogin = !showLocalLogin"
+			>
+				{{ $t('user.auth.otherWaysToSignIn') }}
+			</button>
+		</div>
+
 		<form
-			v-if="!isDesktop && (localAuthEnabled || ldapAuthEnabled)"
+			v-if="!isDesktop && (localAuthEnabled || ldapAuthEnabled) && (!foldLocalLogin || showLocalLogin)"
 			id="loginform"
 			@submit.prevent="submit"
 		>
@@ -98,7 +122,7 @@
 		</form>
 
 		<div
-			v-if="!isDesktop && hasOpenIdProviders"
+			v-if="!isDesktop && hasOpenIdProviders && !foldLocalLogin"
 			class="mbs-4"
 		>
 			<XButton
@@ -157,6 +181,13 @@ const hasOpenIdProviders = computed(() => openidConnect.value.enabled && openidC
 
 const isLoading = computed(() => authStore.isLoading)
 const isDesktop = isDesktopApp()
+
+// Without a password form to fold, or without a provider to lead with, the page stays as upstream's.
+const foldLocalLogin = computed(() => !isDesktop
+	&& configStore.fold_local_login
+	&& hasOpenIdProviders.value
+	&& (localAuthEnabled.value || ldapAuthEnabled.value))
+const showLocalLogin = ref(false)
 
 const confirmedEmailSuccess = ref(false)
 const errorMessage = ref('')
@@ -251,6 +282,32 @@ async function submit() {
 </script>
 
 <style lang="scss" scoped>
+.folded-login {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: var(--yy-space-4, 1rem);
+	margin-block-end: var(--yy-space-6, 1.5rem);
+}
+
+// A quiet text link, not a second button competing with the provider.
+.other-ways-toggle {
+	padding: var(--yy-space-1, .25rem) var(--yy-space-2, .5rem);
+	border: 0;
+	border-radius: var(--yy-radius-sm, 8px);
+	background: none;
+	color: var(--yy-text-muted, var(--grey-600));
+	font: inherit;
+	font-size: .875rem;
+	text-decoration: underline;
+	text-underline-offset: 3px;
+	cursor: pointer;
+
+	&:hover {
+		color: var(--yy-text, var(--text));
+	}
+}
+
 .reset-password-link {
 	display: inline-block;
 }

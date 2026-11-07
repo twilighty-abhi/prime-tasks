@@ -32,6 +32,8 @@ type VikunjaInfos struct {
 	shared.VikunjaInfos
 	// prime-tasks F2: lets the frontend search the whole directory when picking assignees.
 	OrgDirectory bool `json:"org_directory" doc:"Whether service.orgdirectory is on: user search covers everyone in the instance, not just people you share with."`
+	// prime-tasks G1: the login page leads with the OpenID provider buttons.
+	FoldLocalLogin bool `json:"fold_local_login" doc:"Whether auth.local.foldonlogin is on: when OpenID providers are configured, the login page shows them as the main action and folds the username and password form under a link."`
 }
 
 type infoBody struct {
@@ -58,7 +60,8 @@ func init() { AddRouteRegistrar(RegisterInfoRoutes) }
 func info(_ context.Context, _ *struct{}) (*infoBody, error) {
 	base := shared.BuildInfo() //nolint:contextcheck // OIDC provider init deliberately uses a background context — provider lifetime exceeds the request
 	return &infoBody{Body: VikunjaInfos{
-		VikunjaInfos: base,
-		OrgDirectory: config.ServiceOrgDirectory.GetBool(),
+		VikunjaInfos:   base,
+		OrgDirectory:   config.ServiceOrgDirectory.GetBool(),
+		FoldLocalLogin: config.AuthLocalFoldOnLogin.GetBool(),
 	}}, nil
 }

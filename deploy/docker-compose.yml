@@ -19,6 +19,10 @@ services:
       VIKUNJA_SERVICE_PUBLICURL: https://${PRIME_DOMAIN:?set PRIME_DOMAIN in .env}/
       VIKUNJA_SERVICE_SECRET: ${VIKUNJA_SERVICE_SECRET:?set VIKUNJA_SERVICE_SECRET in .env}
       VIKUNJA_DATABASE_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+      # G1: Google sign-in. These fill in clientid/clientsecret of auth.openid.providers.google
+      # in config.yml (Vikunja merges VIKUNJA_* variables into the config file's maps).
+      VIKUNJA_AUTH_OPENID_PROVIDERS_GOOGLE_CLIENTID: ${PRIME_GOOGLE_CLIENT_ID:?set PRIME_GOOGLE_CLIENT_ID in .env (README.md, "Google sign-in")}
+      VIKUNJA_AUTH_OPENID_PROVIDERS_GOOGLE_CLIENTSECRET: ${PRIME_GOOGLE_CLIENT_SECRET:?set PRIME_GOOGLE_CLIENT_SECRET in .env (README.md, "Google sign-in")}
     volumes:
       - ./config.yml:/etc/vikunja/config.yml:ro
       - files:/app/vikunja/files

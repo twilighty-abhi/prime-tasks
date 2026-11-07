@@ -76,6 +76,7 @@ function defaultConfig(): ConfigState {
 		motd: '',
 		link_sharing_enabled: true,
 		org_directory: false,
+		fold_local_login: false,
 		max_file_size: '20MB',
 		max_items_per_page: 50,
 		available_migrators: [],
