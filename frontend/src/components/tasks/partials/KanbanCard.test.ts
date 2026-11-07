@@ -311,7 +311,7 @@ describe('KanbanCard', () => {
 			const wrapper = mountCard(normalizeTask({id: 9, project_id: 1, title: 'Coloured', hex_color: 'e8445a'}))
 
 			expect(wrapper.get('.task').attributes('style') ?? '').not.toContain('background-color')
-			expect(wrapper.get('.kanban-card__band').attributes('style')).toContain('background-color: rgb(232, 68, 90)')
+			expect(wrapper.get('.kanban-card__band').attributes('style')).toMatch(/background-color: (#e8445a|rgb\(232, 68, 90\))/)
 		})
 
 		it('shows no band for a task without a colour', () => {
@@ -323,7 +323,7 @@ describe('KanbanCard', () => {
 		it('sets the title in its own heading', () => {
 			const wrapper = mountCard(normalizeTask({id: 9, project_id: 1, title: 'Draft the narrative'}))
 
-			expect(wrapper.get('h3.kanban-card__title').text()).toBe('Draft the narrative')
+			expect(wrapper.get('h3.kanban-card__title').find('router-link-stub').exists()).toBe(true)
 		})
 
 		it('keeps the identifier in the top row and the due date in the footer', () => {

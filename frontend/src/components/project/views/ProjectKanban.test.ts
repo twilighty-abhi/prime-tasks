@@ -297,10 +297,11 @@ describe('ProjectKanban', () => {
 		expect(updateBucket).not.toHaveBeenCalled()
 	})
 	// prime-tasks: Yuyu quiet columns; the add controls are dashed ghost rows, not outlined pills.
+	// XButton is registered globally in main.ts, so here it renders as an unresolved <xbutton>.
 	it('shows the add task control as a quiet ghost row', async () => {
 		const wrapper = await mountKanban({BucketDraggable: DRAGGABLE_STUB, TaskDraggable: DRAGGABLE_STUB})
 
-		const addTask = wrapper.get('.bucket-footer x-button-stub')
+		const addTask = wrapper.get('.bucket-footer xbutton')
 		expect(addTask.classes()).toContain('kanban-ghost-button')
 		expect(addTask.attributes('variant')).toBe('tertiary')
 	})
@@ -308,7 +309,7 @@ describe('ProjectKanban', () => {
 	it('shows the create bucket control as a quiet ghost row', async () => {
 		const wrapper = await mountKanban({BucketDraggable: DRAGGABLE_STUB, TaskDraggable: DRAGGABLE_STUB})
 
-		const addBucket = wrapper.get('.new-bucket x-button-stub')
+		const addBucket = wrapper.get('.new-bucket xbutton')
 		expect(addBucket.classes()).toContain('kanban-ghost-button')
 		expect(addBucket.attributes('variant')).toBe('tertiary')
 	})
