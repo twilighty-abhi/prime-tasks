@@ -272,4 +272,40 @@ Expired claims are cleaned up every 10 minutes.
 
 ## End-to-end check (Phase 2 gate)
 
-<!-- E2E-RESULT -->
+Run on 2026-11-07 against a scratch instance of the Phase 2 stack tip (`80ea63743`), with Claude Code on the Mac. Tokens are not recorded here.
+
+**Setup:** I built the API with `go tool mage build` (version prime-v2.8.0-46-80ea63743f). The scratch instance ran on 127.0.0.1:3461 against an SQLite backup of run/vikunja.db and a copy of config.yml. Migrations ran cleanly.
+- **A1:** `scripts/new-agent-bot.sh --local ... --owner devadmin --name claude-code` created bot-claude-code (id 6) with a 90-day token and printed the endpoint `http://127.0.0.1:3461/api/v2/mcp`.
+- **Demo project:** project 9 "Q4 grant report", Kanban view 36. Its buckets are To-Do 25 (default), Doing 26, **Review 34** (I created it) and Done 27.
+- **Tasks:** I assigned devadmin to task 8 "Collect programme numbers" (due 2026-11-06) and task 9 "Draft the narrative section" (due 2026-11-11).
+- **Sharing:** project 9 is shared with bot-claude-code with write permission (POST /api/v2/projects/9/users, permission 1).
+- **MCP setup:** `claude mcp add --transport http prime-tasks ...` (local scope, scratch project dir). `claude mcp get` showed it as Connected.
+
+**Headless session:** `claude -p ... --allowedTools mcp__prime-tasks --output-format stream-json --verbose`. It succeeded in 9 turns and cost $0.44.
+
+MCP tool calls by the agent, in order (ToolSearch loaded the schemas first):
+1. `my_work`: returned 2 tasks, #8 (due 11-06, priority 3) and #9 (due 11-11), both in project 9.
+2. `claim_task {task: 8}`: claimed by bot-claude-code, expiring 2 hours later (16:42 +05:30).
+3. `projects_read {id: 9}`: found Kanban view 36 (default bucket 25, done bucket 27).
+4. `find_action {action: buckets_list}`: returned the input schema.
+5. `task_comments_create {task: 8}`: created comment id 2.
+6. `do_action {buckets_list, project 9, view 36}`: returned To-Do 25, Doing 26, Review 34, Done 27.
+7. `release_task {task: 8, bucket_id: 34}`: claim removed and task moved to Review.
+
+**Checks (as devadmin, through the API and the scratch DB):**
+- Comment 1, `<p>Picked up by bot-claude-code</p>` by bot-claude-code: present (posted by the claim).
+- Comment 2, the agent's own comment: present.
+- "agent: working" label: present. Label id 4 was created by bot 6 at claim time. No label_tasks row remains after release. In the step-7 re-claim the label was on task 8 while it was claimed and gone after release.
+- Task 8 is in Review: confirmed. task_buckets shows 34/view 36, and v1 GET /projects/9/views/36/tasks lists 8 under Review.
+- No claim remains: confirmed, task_claims is empty.
+
+**Second bot:** I created bot-other (id 7) with the script and shared project 9 with it (write). bot-claude-code claimed task 8 again over curl (POST /api/v2/tasks/8/claim, 200). bot-other's claim on the same task got the expected **409**:
+`"title":"Conflict","detail":"This task is claimed by bot-claude-code until 2026-11-07T11:13:23Z.","code":4901`, with `details.bot_username=bot-claude-code` and `expires_at=2026-11-07T16:43:23+05:30`. bot-claude-code then released it (200): no claim, no label, and the task stayed in Review.
+
+**Cleanup:** I stopped the scratch instance, ran `claude mcp remove prime-tasks -s local` (mcpServers for the scratch project is now `{}`), and revoked both bots (1 token deleted each, status disabled). I grepped the scratch logs for tokens and found none unredacted.
+
+**Gaps and observations (nothing failed):**
+- The v2 task reads (GET /tasks/8 and GET /projects/9/views/36/tasks) return `bucket_id: 0`, so I confirmed the bucket through v1 and the DB.
+- Each claim posts another "Picked up by" comment, so task 8 now has two (ids 1 and 3).
+- The claim_task and release_task results don't echo the bucket.
+- The `claude` line the script prints names the server `claude-code`, not `prime-tasks`.
