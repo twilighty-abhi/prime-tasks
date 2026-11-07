@@ -39,6 +39,7 @@ Rules for the fork:
 | F6 | Auto-join teams: new users join teams by email domain. `models.AutoJoinTeams` runs from the `user.created` listener (registration, OpenID, LDAP, admin API) and synchronously in `vikunja user create`, which exits before async listeners run | [#4](https://github.com/twilighty-abhi/prime-tasks/pull/4), CLI fix in [#9](https://github.com/twilighty-abhi/prime-tasks/pull/9) | `service.autojointeams` (default empty; commented example in `deploy/config.yml`) | fork-only for now |
 | F7 | Sensible usernames for OpenID users: a new user gets `preferred_username` or the email local part (`abhiram@t4gc.org` becomes `abhiram`), sanitised to what registration accepts, with a numeric suffix on a case-insensitive clash (`abhiram2`, `abhiram3`; `user1-2` after a trailing digit); random name only when nothing usable is left. Display name unchanged from the `name` claim; existing users not renamed | not opened yet | per provider `auth.openid.providers.<key>.usernamefromemail` (default `false`; set in the commented Google block of `deploy/config.yml`) | fork-only for now |
 | A3 | MCP exposes the fork's share and assign (`task_assignees_share_and_assign`, F2) and access list (`project_access_list`, F5) as `find_action` / `do_action` catalog actions; their descriptions say who may call them. Leave project (F4) stays off MCP on purpose | TBD | none (MCP allow-list) | fork-only |
+| A4 | My work: `GET /api/v2/my-work` (operation `my-work`, typed MCP tool `my_work`, token permission `other` → `my_work`) lists the open tasks assigned to the caller across the projects they can read; a bot gets its owner's tasks, only in projects the bot can read. Done tasks and tasks in trashed or archived projects are left out; sorted by due date (none last), priority, id; each task has its project, labels and `url` | TBD | none (new endpoint and tool) | fork-only |
 
 ## Merging a new upstream release
 
@@ -171,9 +172,10 @@ CI equivalent (see [Local CI](#local-ci-while-github-actions-is-unavailable)).
 
 Upstream's MCP endpoint is `POST /api/v2/mcp`. The token needs the `mcp` → `access` permission **and** the route
 permissions of every tool it should see: the server lists only tools whose routes the token may call. A token with
-only `mcp:access` gets a valid `tools/list` with **0 tools**; one with every permission sees 27 typed tools plus
-`find_action` / `do_action` (91 operations in all, `pkg/modules/mcp/exposure.go`). Of the fork's own endpoints,
-share and assign and the access list are catalog actions (A3); leave project is deliberately not exposed.
+only `mcp:access` gets a valid `tools/list` with **0 tools**; one with every permission sees 28 tools (25 typed,
+plus `find_action`, `do_action` and `filter_syntax`; 92 operations in all, `pkg/modules/mcp/exposure.go`). Of the
+fork's own endpoints, share and assign and the access list are catalog actions (A3), `my_work` is a typed tool
+(A4), and leave project is deliberately not exposed.
 
 ## Login rate limit
 
