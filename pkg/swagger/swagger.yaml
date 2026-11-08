@@ -1035,6 +1035,12 @@ definitions:
         description: A timestamp when this task was last updated. You cannot change
           this value.
         type: string
+      view_buckets:
+        description: The task's bucket in each kanban view of its project that the
+          requester can see. Filled when reading a single task and in my-work.
+        items:
+          $ref: '#/definitions/models.TaskViewBucket'
+        type: array
     type: object
   models.TaskAssginee:
     properties:
@@ -1208,6 +1214,15 @@ definitions:
       taskID:
         type: integer
       userID:
+        type: integer
+    type: object
+  models.TaskViewBucket:
+    properties:
+      bucket_id:
+        type: integer
+      bucket_title:
+        type: string
+      project_view_id:
         type: integer
     type: object
   models.Team:

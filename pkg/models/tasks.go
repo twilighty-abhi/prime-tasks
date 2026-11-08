@@ -168,6 +168,9 @@ type Task struct {
 	// All buckets across all views this task is part of. Only present when fetching tasks with the `expand` parameter set to `buckets`.
 	Buckets []*Bucket `xorm:"-" json:"buckets,omitempty" readOnly:"true" doc:"The task's buckets across all views. Only present when requested via the buckets expand option."`
 
+	// The task's bucket in each kanban view of its project that the requester can see. Filled when reading a single task and in my-work.
+	ViewBuckets []*TaskViewBucket `xorm:"-" json:"view_buckets,omitempty" readOnly:"true" doc:"The column (bucket) the task is in, one entry per Kanban view of its project the caller can see. Only present when reading a single task and in my-work."`
+
 	// All comments of this task. Only present when fetching tasks with the `expand` parameter set to `comments`.
 	Comments []*TaskComment `xorm:"-" json:"comments,omitempty" readOnly:"true" doc:"The task's first 50 comments. Only present when requested via the comments expand option."`
 
@@ -742,6 +745,52 @@ func addRelatedTasksToTasks(s *xorm.Session, taskIDs []int64, taskMap map[int64]
 	}
 
 	return
+}
+
+// TaskViewBucket is the bucket a task is in within one Kanban view.
+type TaskViewBucket struct {
+	ProjectViewID int64  `json:"project_view_id" doc:"The Kanban view."`
+	BucketID      int64  `json:"bucket_id" doc:"The bucket (column) the task is in within that view."`
+	BucketTitle   string `json:"bucket_title" doc:"The bucket's title."`
+}
+
+// addViewBucketsToTasks fills ViewBuckets for the tasks in one batched query, limited to views of projects the requester can read.
+func addViewBucketsToTasks(s *xorm.Session, a web.Auth, taskMap map[int64]*Task) error {
+	if len(taskMap) == 0 {
+		return nil
+	}
+	taskIDs := make([]int64, 0, len(taskMap))
+	for id := range taskMap {
+		taskIDs = append(taskIDs, id)
+	}
+	accessible, err := accessibleProjectIDsCond(s, a, "project_views.project_id")
+	if err != nil {
+		return err
+	}
+	rows := []*struct {
+		TaskID        int64  `xorm:"task_id"`
+		ProjectViewID int64  `xorm:"project_view_id"`
+		BucketID      int64  `xorm:"bucket_id"`
+		BucketTitle   string `xorm:"bucket_title"`
+	}{}
+	err = s.Table("task_buckets").
+		Select("task_buckets.task_id, task_buckets.project_view_id, task_buckets.bucket_id, buckets.title AS bucket_title").
+		Join("INNER", "buckets", "buckets.id = task_buckets.bucket_id").
+		Join("INNER", "project_views", "project_views.id = task_buckets.project_view_id").
+		Where(builder.In("task_buckets.task_id", taskIDs)).
+		And(builder.Eq{"project_views.view_kind": ProjectViewKindKanban}).
+		And(accessible).
+		OrderBy("task_buckets.task_id ASC, task_buckets.project_view_id ASC").
+		Find(&rows)
+	if err != nil {
+		return err
+	}
+	for _, r := range rows {
+		if t, has := taskMap[r.TaskID]; has {
+			t.ViewBuckets = append(t.ViewBuckets, &TaskViewBucket{ProjectViewID: r.ProjectViewID, BucketID: r.BucketID, BucketTitle: r.BucketTitle})
+		}
+	}
+	return nil
 }
 
 func addBucketsToTasks(s *xorm.Session, a web.Auth, taskIDs []int64, taskMap map[int64]*Task) (err error) {
@@ -2489,6 +2538,10 @@ func (t *Task) ReadOne(s *xorm.Session, a web.Auth) (err error) {
 
 	if len(taskMap) == 0 {
 		return ErrTaskDoesNotExist{t.ID}
+	}
+
+	if err = addViewBucketsToTasks(s, a, taskMap); err != nil {
+		return
 	}
 
 	*t = *taskMap[t.ID]

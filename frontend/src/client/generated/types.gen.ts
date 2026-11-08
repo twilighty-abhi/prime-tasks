@@ -1385,6 +1385,10 @@ export type MyWorkTask = {
      * Link to the task in the web interface (service.publicurl + tasks/<id>).
      */
     readonly url?: string;
+    /**
+     * The column (bucket) the task is in, one entry per Kanban view of its project the caller can see. Only present when reading a single task and in my-work.
+     */
+    readonly view_buckets?: Array<TaskViewBucket> | null;
 };
 
 export type OpenIdAuthInfo = {
@@ -2684,6 +2688,10 @@ export type Task = {
      * When this task was last updated. Set by the server; ignored on write.
      */
     readonly updated?: string;
+    /**
+     * The column (bucket) the task is in, one entry per Kanban view of its project the caller can see. Only present when reading a single task and in my-work.
+     */
+    readonly view_buckets?: Array<TaskViewBucket> | null;
 };
 
 export type TaskAssginee = {
@@ -3060,6 +3068,10 @@ export type TaskReadOneBody = {
      * When this task was last updated. Set by the server; ignored on write.
      */
     readonly updated?: string;
+    /**
+     * The column (bucket) the task is in, one entry per Kanban view of its project the caller can see. Only present when reading a single task and in my-work.
+     */
+    readonly view_buckets?: Array<TaskViewBucket> | null;
 };
 
 export type TaskRelation = {
@@ -3123,6 +3135,21 @@ export type TaskShareAndAssign = {
      * The user to assign.
      */
     user_id?: number;
+};
+
+export type TaskViewBucket = {
+    /**
+     * The bucket (column) the task is in within that view.
+     */
+    bucket_id?: number;
+    /**
+     * The bucket's title.
+     */
+    bucket_title?: string;
+    /**
+     * The Kanban view.
+     */
+    project_view_id?: number;
 };
 
 export type Team = {
@@ -3824,6 +3851,10 @@ export type TrashedTask = {
      * When this task was last updated. Set by the server; ignored on write.
      */
     readonly updated?: string;
+    /**
+     * The column (bucket) the task is in, one entry per Kanban view of its project the caller can see. Only present when reading a single task and in my-work.
+     */
+    readonly view_buckets?: Array<TaskViewBucket> | null;
 };
 
 export type User = {
