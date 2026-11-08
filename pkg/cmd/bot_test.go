@@ -235,3 +235,59 @@ func TestBotCLIRevoke(t *testing.T) {
 	s.Close()
 	require.Error(t, err)
 }
+
+func TestBotCLIRevokeReleasesClaims(t *testing.T) {
+	setupBotCLI(t)
+	s := db.NewSession()
+	created, err := createAgentBot(context.Background(), s, agentBotOptions{Owner: "user1", Name: "claimer", Expires: time.Now().Add(time.Hour)})
+	s.Close()
+	require.NoError(t, err)
+	other, err := func() (*agentBot, error) {
+		s := db.NewSession()
+		defer s.Close()
+		return createAgentBot(context.Background(), s, agentBotOptions{Owner: "user1", Name: "bystander", Expires: time.Now().Add(time.Hour)})
+	}()
+	require.NoError(t, err)
+
+	// Both bots get write access to project 1 (owned by user 1) and claim one task each.
+	s = db.NewSession()
+	for _, b := range []*agentBot{created, other} {
+		_, err = s.Insert(&models.ProjectUser{UserID: b.Bot.ID, ProjectID: 1, Permission: models.PermissionWrite})
+		require.NoError(t, err)
+	}
+	require.NoError(t, s.Commit())
+	s.Close()
+	for taskID, b := range map[int64]*agentBot{1: created, 2: other} {
+		s = db.NewSession()
+		require.NoError(t, (&models.TaskClaim{TaskID: taskID}).Create(s, b.Bot))
+		require.NoError(t, s.Commit())
+		s.Close()
+	}
+	db.AssertExists(t, "task_claims", map[string]any{"task_id": 1, "bot_id": created.Bot.ID}, false)
+
+	s = db.NewSession()
+	_, _, err = revokeAgentBot(context.Background(), s, "user1", "claimer")
+	s.Close()
+	require.NoError(t, err)
+
+	db.AssertMissing(t, "task_claims", map[string]any{"task_id": 1})
+	db.AssertExists(t, "task_comments", map[string]any{
+		"task_id":   1,
+		"author_id": created.Bot.ID,
+		"comment":   "<p>Released: bot-claimer was revoked</p>",
+	}, false)
+	db.AssertMissing(t, "label_tasks", builder.Eq{"task_id": 1, "label_id": claimLabelID(t)})
+	// The other bot's claim is untouched.
+	db.AssertExists(t, "task_claims", map[string]any{"task_id": 2, "bot_id": other.Bot.ID}, false)
+}
+
+func claimLabelID(t *testing.T) int64 {
+	t.Helper()
+	s := db.NewSession()
+	defer s.Close()
+	var id int64
+	has, err := s.Table("labels").Where("title = ?", models.TaskClaimLabelTitle).OrderBy("id").Cols("id").Get(&id)
+	require.NoError(t, err)
+	require.True(t, has)
+	return id
+}

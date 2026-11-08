@@ -141,7 +141,7 @@ the bot through the API (`POST /api/v2/projects/{project}/users` with `{"usernam
 scripts/new-agent-bot.sh --revoke --owner <owner username> --name <agent name>
 ```
 
-This deletes all of the bot's tokens and disables it; its comments, shares and history stay, and
+This deletes all of the bot's tokens, releases its task claims (label removed, "Released" comment) and disables it; its comments, shares and history stay, and
 `--reuse` brings it back with a new token. The owner can also delete single tokens or the bot itself in
 Settings (API tokens, Bots).
 

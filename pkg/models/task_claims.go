@@ -395,19 +395,7 @@ func cleanupExpiredTaskClaims(now time.Time) error {
 		return err
 	}
 	for _, claim := range expired {
-		// No doer here, so the label goes without the per-user permission checks of LabelTask.Delete.
-		if _, err := s.Where(builder.Eq{
-			"task_id":  claim.TaskID,
-			"label_id": claim.LabelID,
-		}).Delete(&LabelTask{}); err != nil {
-			_ = s.Rollback()
-			return err
-		}
-		if _, err := s.ID(claim.ID).Delete(&TaskClaim{}); err != nil {
-			_ = s.Rollback()
-			return err
-		}
-		if err := updateTaskLastUpdated(s, &Task{ID: claim.TaskID}); err != nil {
+		if err := dropTaskClaimWithoutDoer(s, claim); err != nil {
 			_ = s.Rollback()
 			return err
 		}
@@ -416,4 +404,43 @@ func cleanupExpiredTaskClaims(now time.Time) error {
 		log.Debugf("[Task Claim Cleanup Cron] Removed %d expired claims", len(expired))
 	}
 	return s.Commit()
+}
+
+// dropTaskClaimWithoutDoer deletes the claim and its label for callers with no acting user (the cleanup cron and bot revokes),
+// so the label goes without the per-user permission checks of LabelTask.Delete.
+func dropTaskClaimWithoutDoer(s *xorm.Session, claim *TaskClaim) error {
+	if _, err := s.Where(builder.Eq{
+		"task_id":  claim.TaskID,
+		"label_id": claim.LabelID,
+	}).Delete(&LabelTask{}); err != nil {
+		return err
+	}
+	if _, err := s.ID(claim.ID).Delete(&TaskClaim{}); err != nil {
+		return err
+	}
+	return updateTaskLastUpdated(s, &Task{ID: claim.TaskID})
+}
+
+// ReleaseBotClaims releases every claim the bot holds, live or expired, in the caller's transaction: the claim row and
+// the "agent: working" label go and the task gets a "Released: <bot> was <reason>" comment authored by the bot.
+// Claims of other bots are untouched. Call it whenever a bot stops being usable (revoked, disabled or deleted).
+func ReleaseBotClaims(s *xorm.Session, bot *user.User, reason string) error {
+	claims := []*TaskClaim{}
+	if err := s.Where("bot_id = ?", bot.ID).Find(&claims); err != nil {
+		return err
+	}
+	for _, claim := range claims {
+		if err := dropTaskClaimWithoutDoer(s, claim); err != nil {
+			return err
+		}
+		// Not TaskComment.Create: the bot may have lost write access to the project by now.
+		if _, err := s.Insert(&TaskComment{
+			TaskID:   claim.TaskID,
+			AuthorID: bot.ID,
+			Comment:  "<p>Released: " + html.EscapeString(botDisplayUsername(bot)) + " was " + html.EscapeString(reason) + "</p>",
+		}); err != nil {
+			return err
+		}
+	}
+	return nil
 }

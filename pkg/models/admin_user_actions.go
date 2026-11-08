@@ -107,6 +107,11 @@ func ChangeUserStatus(s *xorm.Session, doer *user.User, target *user.User, statu
 		if err := DeleteAllUserSessions(s, target.ID); err != nil {
 			return err
 		}
+		if target.IsBot() {
+			if err := ReleaseBotClaims(s, target, "revoked"); err != nil {
+				return err
+			}
+		}
 	}
 
 	events.DispatchOnCommit(s, &AdminUserStatusChangedEvent{

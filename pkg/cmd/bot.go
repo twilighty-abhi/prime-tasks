@@ -117,9 +117,9 @@ endpoint and a ready "claude mcp add" command. It cannot be shown again.`,
 
 var botRevokeCmd = &cobra.Command{
 	Use:   "revoke",
-	Short: "Delete every API token of bot-<name> and disable the bot.",
+	Short: "Delete every API token of bot-<name>, release its task claims and disable the bot.",
 	Long: `Deletes all API tokens of the bot and disables it, so it can no longer call the API or MCP.
-Its project shares, comments and history stay. "bot create --reuse" re-enables it with a new token.`,
+It also releases the bot's task claims (label removed, a "Released" comment). Its project shares, comments and history stay. "bot create --reuse" re-enables it with a new token.`,
 	PreRun: func(_ *cobra.Command, _ []string) {
 		initBotCLI()
 	},
@@ -342,6 +342,9 @@ func revokeAgentBot(ctx context.Context, s *xorm.Session, ownerIdentifier, name 
 		return nil, 0, err
 	}
 	if err = setBotStatus(s, bot, owner, user.StatusDisabled); err != nil {
+		return nil, 0, err
+	}
+	if err = models.ReleaseBotClaims(s, bot, "revoked"); err != nil {
 		return nil, 0, err
 	}
 	if err = s.Commit(); err != nil {
