@@ -884,7 +884,7 @@
   "label": {
     "title": "Labels",
     "manage": "Manage labels",
-    "description": "Click on a label to edit it. You can edit all labels you created, you can use all labels which are associated with a task to whose project you have access.",
+    "description": "Click a label to see its tasks, or the pencil to edit it. You can edit labels you created, and use any label on a task in a project you can access.",
     "newCTA": "You currently do not have any labels.",
     "create": {
       "header": "New label",
