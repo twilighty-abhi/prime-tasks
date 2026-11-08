@@ -43,6 +43,15 @@ HTMLElement.prototype.hidePopover = function hidePopover(this: HTMLElement) {
 	dispatchToggle(this, 'closed')
 }
 
+// happy-dom does not know :popover-open either.
+const nativeMatches = HTMLElement.prototype.matches
+HTMLElement.prototype.matches = function matches(this: HTMLElement, selector: string): boolean {
+	if (selector === ':popover-open') {
+		return this.hasAttribute(POPOVER_OPEN)
+	}
+	return nativeMatches.call(this, selector)
+} as typeof HTMLElement.prototype.matches
+
 // What the browser does on an outside click or Escape.
 function lightDismiss(element: HTMLElement) {
 	element.removeAttribute(POPOVER_OPEN)
@@ -162,6 +171,22 @@ describe('Popup', () => {
 
 		expect(wrapper.emitted('update:open')).toEqual([[false]])
 		expect(wrapper.find('.popup').attributes(POPOVER_OPEN)).toBeUndefined()
+
+		wrapper.unmount()
+	})
+
+	it('reopens when the trigger is clicked before the browser delivered the light dismiss toggle event', async () => {
+		const wrapper = mount(Popup, {...mountOptions, props: {open: true}})
+		await flushPromises()
+		const popup = wrapper.find('.popup').element as HTMLElement
+
+		// The browser has already hidden the popover, but its toggle event is still queued.
+		popup.removeAttribute(POPOVER_OPEN)
+		await wrapper.find('.trigger').trigger('click')
+		await flushPromises()
+
+		expect(popup.hasAttribute(POPOVER_OPEN)).toBe(true)
+		expect(wrapper.emitted('update:open')).toBeUndefined()
 
 		wrapper.unmount()
 	})

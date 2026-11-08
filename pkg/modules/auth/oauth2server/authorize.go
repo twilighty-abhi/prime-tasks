@@ -101,22 +101,20 @@ func Authorize(req *AuthorizeRequest, userID int64) (*AuthorizeResponse, error) 
 		return nil, &models.ErrOAuthMissingPKCE{}
 	}
 
-	s := db.NewSession()
+	// No transaction: a read followed by a write inside one makes SQLite fail the write straight away
+	// with "database is locked" (busy_timeout does not apply) when another connection committed in
+	// between, e.g. the session refresh that runs right after login. The lookup and the single insert
+	// do not need to be atomic, and a lone write waits for the lock instead.
+	s := db.NewAutocommitSession()
 	defer s.Close()
 
 	fullUser, err := user.GetUserByID(s, userID)
 	if err != nil {
-		_ = s.Rollback()
 		return nil, err
 	}
 
 	code, err := models.CreateOAuthCode(s, fullUser.ID, req.ClientID, req.RedirectURI, req.CodeChallenge, req.CodeChallengeMethod)
 	if err != nil {
-		_ = s.Rollback()
-		return nil, err
-	}
-
-	if err := s.Commit(); err != nil {
 		return nil, err
 	}
 

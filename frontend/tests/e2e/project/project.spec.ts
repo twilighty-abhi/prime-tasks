@@ -178,6 +178,9 @@ test.describe('Projects', () => {
 		await expect(background).toHaveClass(/is-visible/)
 		await expect(background).toHaveCSS('background-image', /url\(/)
 		await page.locator('.project-background-setting footer.card-footer').getByRole('button', {name: 'Close', exact: true}).click()
+		// Closing navigates back, and a reload before that finishes aborts it.
+		await expect(page.locator('.project-background-setting')).toBeHidden()
+		await expect(page).not.toHaveURL(/\/settings\/background/)
 
 		await page.reload()
 		await expect(background).toHaveClass(/is-visible/)
@@ -195,6 +198,9 @@ test.describe('Projects', () => {
 		expect((await removal).ok()).toBe(true)
 		await expect(background).not.toHaveClass(/is-visible/)
 		await expect(background).toHaveCSS('background-image', 'none')
+		// Removing goes back to the project once the response is in; wait for that before reloading.
+		await expect(page.locator('.project-background-setting')).toBeHidden()
+		await expect(page).not.toHaveURL(/\/settings\/background/)
 
 		await page.reload()
 		await expect(page.locator('.project-title')).toContainText(project.title)

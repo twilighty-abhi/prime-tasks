@@ -210,6 +210,7 @@ import XButton from '@/components/input/Button.vue'
 
 import {isEditorContentEmpty} from '@/helpers/editorContentEmpty'
 import inputPrompt from '@/helpers/inputPrompt'
+import {otherInputHasFocus} from '@/components/input/editor/otherInputHasFocus'
 import {getScrollParent} from '@/helpers/getScrollParent'
 import {setLinkInEditor} from '@/components/input/editor/setLinkInEditor'
 import {saveEditorDraft, loadEditorDraft, clearEditorDraft} from '@/helpers/editorDraftStorage'
@@ -704,6 +705,12 @@ function setFocusToEditor(event: KeyboardEvent) {
 }
 
 function focusIfEditing() {
+	// The click that opens the link or alt text prompt bubbles up here after the prompt took focus.
+	// tiptap focuses a frame later and would pull focus back, so the typed text lands in the document.
+	const dom = editor.value?.view.dom
+	if (dom && otherInputHasFocus(dom)) {
+		return
+	}
 	if (isEditing.value) {
 		editor.value?.commands.focus()
 	}
